@@ -1,0 +1,178 @@
+/* ExamGen Ultra 5.0 - Warm Light + Premium SaaS + AI Gradient Design Tokens */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Warm Light Mode as Default Base */
+  --bg-primary: #FAF8F5;
+  --bg-sidebar: #F5F2EC;
+  --bg-card: #FFFFFF;
+  --bg-card-secondary: #F7F4EF;
+  --border-subtle: #E7E1D8;
+  --border-active: rgba(99, 102, 241, 0.45);
+  --text-main: #1C1917;
+  --text-muted: #78716C;
+  --ai-gradient: linear-gradient(135deg, #7C3AED 0%, #6366F1 38%, #3B82F6 72%, #F59E0B 100%);
+  --shadow-warm-card: 0 1px 3px 0 rgba(28, 25, 23, 0.03), 0 6px 18px 0 rgba(28, 25, 23, 0.04);
+}
+
+html.dark {
+  --bg-primary: #080B14;
+  --bg-sidebar: #0C1120;
+  --bg-card: #111827;
+  --bg-card-secondary: #151B2B;
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-active: rgba(139, 92, 246, 0.4);
+  --text-main: #F8FAFC;
+  --text-muted: #94A3B8;
+  --ai-gradient: linear-gradient(135deg, #8B5CF6 0%, #6366F1 35%, #3B82F6 70%, #06B6D4 100%);
+  --shadow-warm-card: 0 4px 24px -1px rgba(0, 0, 0, 0.3);
+}
+
+body {
+  margin: 0;
+  background-color: var(--bg-primary);
+  color: var(--text-main);
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  overflow-x: hidden;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+/* Glassmorphism primitives */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid #E7E1D8;
+  box-shadow: 0 1px 3px rgba(28, 25, 23, 0.02), 0 8px 24px -4px rgba(28, 25, 23, 0.04);
+}
+
+html.dark .glass-panel {
+  background: rgba(17, 24, 39, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid #E7E1D8;
+  box-shadow: 0 2px 8px -2px rgba(28, 25, 23, 0.04), 0 8px 24px -4px rgba(28, 25, 23, 0.05);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-card:hover {
+  border-color: rgba(99, 102, 241, 0.35);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px -2px rgba(28, 25, 23, 0.06), 0 12px 32px -4px rgba(99, 102, 241, 0.08);
+}
+
+html.dark .glass-card {
+  background: rgba(17, 24, 39, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.3);
+}
+
+html.dark .glass-card:hover {
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: 0 8px 32px -2px rgba(0, 0, 0, 0.5), 0 0 20px -2px rgba(139, 92, 246, 0.2);
+}
+
+/* AI Gradient Text & Buttons with Warm Sunset / Quantum Glow */
+.gradient-ai-text {
+  background: linear-gradient(135deg, #6D28D9 0%, #4F46E5 40%, #0284C7 75%, #D97706 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+html.dark .gradient-ai-text {
+  background: linear-gradient(135deg, #A78BFA 0%, #818CF8 35%, #60A5FA 70%, #22D3EE 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.gradient-ai-btn {
+  background: linear-gradient(135deg, #7C3AED 0%, #6366F1 45%, #2563EB 80%, #F59E0B 100%);
+  color: #FFFFFF;
+  box-shadow: 0 3px 14px 0 rgba(99, 102, 241, 0.28);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.gradient-ai-btn:hover {
+  box-shadow: 0 6px 22px 0 rgba(124, 58, 237, 0.38);
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+
+html.dark .gradient-ai-btn {
+  background: linear-gradient(135deg, #8B5CF6 0%, #6366F1 45%, #3B82F6 100%);
+  box-shadow: 0 2px 14px 0 rgba(99, 102, 241, 0.35);
+}
+
+html.dark .gradient-ai-btn:hover {
+  box-shadow: 0 4px 20px 0 rgba(139, 92, 246, 0.5);
+}
+
+.gradient-ai-border {
+  position: relative;
+}
+
+.gradient-ai-border::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.7), rgba(99, 102, 241, 0.5), rgba(245, 158, 11, 0.7));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+html.dark .gradient-ai-border::before {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.8), rgba(99, 102, 241, 0.6), rgba(6, 182, 212, 0.8));
+}
+
+/* Custom Sleek Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(120, 113, 108, 0.22);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(120, 113, 108, 0.38);
+}
+
+html.dark ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* Subtle background pattern for warm linear feel */
+.bg-grid-pattern {
+  background-size: 32px 32px;
+  background-image: 
+    linear-gradient(to right, rgba(120, 113, 108, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(120, 113, 108, 0.04) 1px, transparent 1px);
+}
+
+html.dark .bg-grid-pattern {
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+}

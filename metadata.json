@@ -1,0 +1,8 @@
+{
+  "name": "ExamGen Ultra 5.0",
+  "description": "ExamGen Ultra 5.0 – AI Powered Assessment Platform. Nền tảng Ra đề và Đánh giá Giáo dục Thông minh theo chuẩn GDPT 2018 với giao diện Linear & AI Glassmorphism.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

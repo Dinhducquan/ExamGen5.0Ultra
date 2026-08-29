@@ -1,0 +1,85 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User account in ExamGen Ultra 5.0 platform",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "number",
+          "description": "Unique numeric identifier for the user"
+        },
+        "name": {
+          "type": "string",
+          "description": "Full name of the user"
+        },
+        "username": {
+          "type": "string",
+          "description": "Unique login username"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Email address of the user"
+        },
+        "password": {
+          "type": "string",
+          "description": "Hashed or encoded password for authentication"
+        },
+        "role": {
+          "type": "string",
+          "enum": ["Quản trị hệ thống", "Giáo viên"],
+          "description": "User role permissions"
+        },
+        "school": {
+          "type": "string",
+          "description": "School / Institution name"
+        },
+        "profGroup": {
+          "type": "string",
+          "description": "Professional subject department group"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["Hoạt động", "Tạm khóa"],
+          "description": "Account status"
+        },
+        "usageCount": {
+          "type": "number",
+          "description": "Number of logins or exam generations"
+        },
+        "tokenUsage": {
+          "type": "number",
+          "description": "Total AI tokens consumed"
+        },
+        "usageLimit": {
+          "type": "number",
+          "description": "Trial usage limit count if applicable"
+        },
+        "lastLogin": {
+          "type": "string",
+          "description": "Timestamp string of the last login"
+        },
+        "avatar": {
+          "type": "string",
+          "description": "Avatar URL or base64 data"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Account creation timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Account last updated timestamp"
+        }
+      },
+      "required": ["id", "name", "username", "role", "status"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Centralized database collection of registered user accounts"
+    }
+  }
+}

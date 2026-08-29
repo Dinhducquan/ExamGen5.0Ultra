@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="vi" class="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ExamGen Ultra 5.0 – Nền tảng Ra đề & Đánh giá Thông minh AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=JetBrains+Mono:wght@400;500;600&family=Times+New+Roman&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['"Plus Jakarta Sans"', 'Inter', 'system-ui', 'sans-serif'],
+              mono: ['"JetBrains Mono"', 'monospace'],
+              times: ['"Times New Roman"', 'serif'],
+            },
+            colors: {
+              warm: {
+                50: '#FAF8F5',
+                100: '#F5F1EB',
+                200: '#EAE3D9',
+                300: '#D8CEBF',
+                400: '#B8A894',
+                500: '#94806A',
+                600: '#756452',
+                700: '#574A3D',
+                800: '#3D342B',
+                900: '#1C1917',
+              },
+              background: {
+                DEFAULT: '#FAF8F5',
+                dark: '#080B14',
+                sidebar: '#F5F2EC',
+                'sidebar-dark': '#0C1120',
+                card: '#FFFFFF',
+                'card-dark': '#111827',
+                'card-secondary': '#F7F4EF',
+                'card-secondary-dark': '#151B2B',
+              },
+              brand: {
+                purple: '#8B5CF6',
+                indigo: '#6366F1',
+                blue: '#3B82F6',
+                cyan: '#06B6D4',
+                pink: '#EC4899',
+                green: '#22C55E',
+                amber: '#F59E0B',
+              }
+            },
+            boxShadow: {
+              'warm-sm': '0 1px 3px 0 rgba(28, 25, 23, 0.03), 0 4px 12px 0 rgba(28, 25, 23, 0.04)',
+              'warm-md': '0 4px 20px -2px rgba(28, 25, 23, 0.06), 0 2px 6px -1px rgba(28, 25, 23, 0.03)',
+              'warm-glow': '0 0 25px -4px rgba(245, 158, 11, 0.18)',
+              'glow-sm': '0 0 15px -3px rgba(99, 102, 241, 0.25)',
+              'glow-md': '0 0 25px -5px rgba(139, 92, 246, 0.35)',
+              'glow-cyan': '0 0 20px -4px rgba(6, 182, 212, 0.3)',
+              'glass': '0 8px 32px 0 rgba(28, 25, 23, 0.08)',
+            },
+            animation: {
+              'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+              'shimmer': 'shimmer 2.5s infinite linear',
+              'glow-pulse': 'glowPulse 3s ease-in-out infinite',
+            },
+            keyframes: {
+              shimmer: {
+                '0%': { backgroundPosition: '-200% 0' },
+                '100%': { backgroundPosition: '200% 0' },
+              },
+              glowPulse: {
+                '0%, 100%': { opacity: '0.4' },
+                '50%': { opacity: '0.9' },
+              }
+            }
+          },
+        },
+      }
+    </script>
+    <style>
+      @media print {
+        body {
+          background-color: white !important;
+          color: black !important;
+        }
+        .no-print {
+          display: none !important;
+        }
+        #printable-content {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 100%;
+          padding: 20px;
+          margin: 0;
+          overflow: visible;
+        }
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "recharts": "https://aistudiocdn.com/recharts@^3.3.0",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.27.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body class="bg-[#FAF8F5] dark:bg-[#080B14] text-[#1C1917] dark:text-[#F8FAFC] antialiased selection:bg-indigo-500 selection:text-white transition-colors duration-200">
+    <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>
