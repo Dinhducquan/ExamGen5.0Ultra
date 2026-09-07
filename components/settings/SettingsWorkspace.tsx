@@ -15,6 +15,7 @@ import LicenseGeneratorModal from '../auth/LicenseGeneratorModal';
 import UserGuideModal from './UserGuideModal';
 import { useI18n } from '../../hooks/useI18n';
 import { ModelSelectorMenu } from '../ai/ModelSelectorMenu';
+import AIModelCenterModal from '../ai/AIModelCenterModal';
 import { GEMINI_MODELS } from '../../lib/geminiModels';
 
 const settingsCategories = [
@@ -165,12 +166,13 @@ const SecurityPanel: React.FC<{
     );
 };
 
-const AiPanel: React.FC = () => {
+const AIPanel: React.FC = () => {
     const { advSettings, setAdvSettings } = useAdvancedSettings();
     const { addToast } = useToast();
     const API_KEY_STORAGE_KEY = 'examgen_gemini_api_key';
     const [apiKey, setApiKey] = useState(() => localStorage.getItem(API_KEY_STORAGE_KEY) || '');
     const [showKey, setShowKey] = useState(false);
+    const [isCenterOpen, setIsCenterOpen] = useState(false);
 
     const handleSaveKey = () => {
         if (!apiKey.trim()) {
@@ -182,59 +184,88 @@ const AiPanel: React.FC = () => {
     };
 
     return (
-        <Card className="shadow-lg border-none bg-white dark:bg-slate-900">
-            <CardHeader><CardTitle className="flex items-center gap-2"><Sparkles/> Trí tuệ nhân tạo (Gemini AI thế hệ mới)</CardTitle></CardHeader>
-            <CardContent className="p-0">
-                <SettingItem title="Gemini API Key" description="Cung cấp khóa API Google AI Studio của bạn để sử dụng các tính năng AI.">
-                    <div className="flex items-center gap-2">
-                        <div className="relative">
-                            <Input
-                                type={showKey ? 'text' : 'password'}
-                                value={apiKey}
-                                onChange={(e) => setApiKey(e.target.value)}
-                                className="w-64"
-                                placeholder="Nhập API Key của bạn"
-                            />
-                            <Button type="button" variant="ghost" size="sm" className="absolute right-1 top-1/2 -translate-y-1/2 p-1 h-auto" onClick={() => setShowKey(!showKey)}>
-                                {showKey ? <EyeOff size={18}/> : <Eye size={18}/>}
-                            </Button>
+        <>
+            <Card className="shadow-lg border-none bg-white dark:bg-slate-900">
+                <CardHeader>
+                    <CardTitle className="flex items-center justify-between">
+                        <span className="flex items-center gap-2">
+                            <Sparkles className="w-5 h-5 text-indigo-600" />
+                            Trung Tâm Mô Hình AI & Khả Năng Chịu Tải (5 Nhà Cung Cấp • 17 Models)
+                        </span>
+                        <Button 
+                            variant="default" 
+                            size="sm" 
+                            onClick={() => setIsCenterOpen(true)}
+                            className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-xs font-bold"
+                        >
+                            <Sliders className="w-4 h-4 mr-1.5" /> Quản Lý Trung Tâm AI & API Keys
+                        </Button>
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="p-0">
+                    <SettingItem title="Google Gemini API Key" description="Cung cấp khóa API Google AI Studio để kích hoạt các mô hình Gemini 3.7 / 3.1.">
+                        <div className="flex items-center gap-2">
+                            <div className="relative">
+                                <Input
+                                    type={showKey ? 'text' : 'password'}
+                                    value={apiKey}
+                                    onChange={(e) => setApiKey(e.target.value)}
+                                    className="w-64 text-xs"
+                                    placeholder="Nhập API Key của bạn"
+                                />
+                                <Button type="button" variant="ghost" size="sm" className="absolute right-1 top-1/2 -translate-y-1/2 p-1 h-auto" onClick={() => setShowKey(!showKey)}>
+                                    {showKey ? <EyeOff size={18}/> : <Eye size={18}/>}
+                                </Button>
+                            </div>
+                            <Button onClick={handleSaveKey} size="sm">Lưu</Button>
                         </div>
-                        <Button onClick={handleSaveKey}>Lưu</Button>
-                    </div>
-                </SettingItem>
-                 <SettingItem title="Chế độ AI hỗ trợ" description="Bật/tắt các tính năng gợi ý và tự động hóa của AI.">
-                    <Switch checked={advSettings.aiAssistant} onCheckedChange={(c) => setAdvSettings({ aiAssistant: c })} />
-                </SettingItem>
-                <SettingItem title="Mức độ tự động" description="Chọn mức độ can thiệp của AI trong quá trình làm việc.">
-                    <Select value={advSettings.automationLevel} onValueChange={(v) => setAdvSettings({ automationLevel: v as 'manual' | 'suggested' | 'full' })}>
-                        <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="manual">Thủ công</SelectItem>
-                            <SelectItem value="suggested">Gợi ý</SelectItem>
-                            <SelectItem value="full">Tự động hoàn toàn</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </SettingItem>
-                <SettingItem title="Cấu hình mô hình Gemini AI" description="Lựa chọn mô hình AI thế hệ mới nhất cho toàn bộ hệ thống tạo đề & trộn đề.">
-                    <div className="w-full max-w-xl py-2">
-                        <ModelSelectorMenu variant="full" />
-                    </div>
-                </SettingItem>
-                <SettingItem title="Mức độ suy luận (Reasoning Effort)" description="Tùy chỉnh ngân sách tư duy sâu cho các môn thi logic (Toán, Lý, Hóa).">
-                    <Select value={advSettings.aiReasoningEffort || 'medium'} onValueChange={(v) => setAdvSettings({ aiReasoningEffort: v as any })}>
-                        <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="low">Thấp (Tốc độ phản hồi tức thì)</SelectItem>
-                            <SelectItem value="medium">Tiêu chuẩn (Khuyên dùng)</SelectItem>
-                            <SelectItem value="high">Chuyên sâu (Tư duy toán học nâng cao)</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </SettingItem>
-                 <SettingItem title="Nhật ký AI" description="Xem lịch sử các nội dung đã được tạo bởi AI.">
-                     <Button variant="outline" onClick={() => addToast('Hệ thống đang lưu trữ lịch sử tạo đề.')}><Bot className="w-4 h-4 mr-2"/>Xem lịch sử AI</Button>
-                </SettingItem>
-            </CardContent>
-        </Card>
+                    </SettingItem>
+                    <SettingItem title="Tự động chuyển mô hình khi nghẽn (Auto-Fallback)" description="Tự động gọi mô hình dự phòng kế tiếp trong chuỗi khi gặp lỗi 429 hoặc hết hạn ngạch API.">
+                        <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => setIsCenterOpen(true)}
+                            className="text-xs text-indigo-600 font-bold border-indigo-200 hover:bg-indigo-50"
+                        >
+                            Cấu hình Chuỗi Dự Phòng (Gemini → OpenAI → Claude → DeepSeek)
+                        </Button>
+                    </SettingItem>
+                    <SettingItem title="Chế độ AI hỗ trợ" description="Bật/tắt các tính năng gợi ý và tự động hóa của AI.">
+                        <Switch checked={advSettings.aiAssistant} onCheckedChange={(c) => setAdvSettings({ aiAssistant: c })} />
+                    </SettingItem>
+                    <SettingItem title="Mức độ tự động" description="Chọn mức độ can thiệp của AI trong quá trình làm việc.">
+                        <Select value={advSettings.automationLevel} onValueChange={(v) => setAdvSettings({ automationLevel: v as 'manual' | 'suggested' | 'full' })}>
+                            <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="manual">Thủ công</SelectItem>
+                                <SelectItem value="suggested">Gợi ý</SelectItem>
+                                <SelectItem value="full">Tự động hoàn toàn</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </SettingItem>
+                    <SettingItem title="Cấu hình Mô Hình AI Hệ Thống" description="Bộ chọn 17 mô hình từ 5 nhà cung cấp (Google Gemini, OpenAI, Microsoft Copilot, Anthropic Claude, DeepSeek).">
+                        <div className="w-full max-w-xl py-2">
+                            <ModelSelectorMenu variant="full" />
+                        </div>
+                    </SettingItem>
+                    <SettingItem title="Mức độ suy luận (Reasoning Effort)" description="Tùy chỉnh ngân sách tư duy sâu cho các môn thi logic (Toán, Lý, Hóa).">
+                        <Select value={advSettings.aiReasoningEffort || 'medium'} onValueChange={(v) => setAdvSettings({ aiReasoningEffort: v as any })}>
+                            <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="low">Thấp (Tốc độ phản hồi tức thì)</SelectItem>
+                                <SelectItem value="medium">Tiêu chuẩn (Khuyên dùng)</SelectItem>
+                                <SelectItem value="high">Chuyên sâu (Tư duy toán học nâng cao)</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </SettingItem>
+                </CardContent>
+            </Card>
+
+            <AIModelCenterModal
+                isOpen={isCenterOpen}
+                onClose={() => setIsCenterOpen(false)}
+            />
+        </>
     );
 };
 
@@ -378,7 +409,7 @@ export default function SettingsWorkspace({ setCurrentPage }: SettingsWorkspaceP
       case 'security':
         return <SecurityPanel setCurrentPage={setCurrentPage} onGenerateLicenseClick={() => setIsLicenseModalOpen(true)} />;
       case 'ai':
-        return <AiPanel />;
+        return <AIPanel />;
       case 'publishing':
         return <PublishingPanel />;
       case 'connections':

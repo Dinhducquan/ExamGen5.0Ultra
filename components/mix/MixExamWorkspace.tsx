@@ -12,6 +12,7 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { useSystemInstruction } from '../../hooks/useSystemInstruction';
 import { useI18n } from '../../hooks/useI18n';
 import { useAdvancedSettings } from '../../hooks/useAdvancedSettings';
+import { safeGenerateContent } from '../../lib/gemini';
 
 interface MixExamWorkspaceProps {
   examData: GeneratedExamData | null;
@@ -170,17 +171,13 @@ Hãy trả về kết quả dưới dạng một MẢNG JSON. Mảng này PHẢI
             }
         };
         
-        const response = await ai.models.generateContent({
+        const response = await safeGenerateContent({
             model: advSettings.aiModel,
             contents: prompt,
-            config: {
-                responseMimeType: "application/json",
-                responseSchema: responseSchema,
-                systemInstruction: systemInstruction.instruction,
-            },
+            systemInstruction: systemInstruction.instruction,
         });
         
-        if (response.usageMetadata) {
+        if (response.usageMetadata?.totalTokenCount) {
             updateTokenUsage(response.usageMetadata.totalTokenCount);
         }
 
@@ -252,20 +249,13 @@ Hãy trả về kết quả dưới dạng một MẢNG JSON. Mảng này PHẢI
           
           const extractPrompt = `Đây là file chứa nội dung đề thi. Hãy trích xuất toàn bộ nội dung đề thi (bao gồm các câu hỏi, phương án lựa chọn và đáp án nếu có) và trả về dưới dạng văn bản thuần hoặc HTML giữ nguyên cấu trúc. KHÔNG được thay đổi nội dung, chỉ trích xuất lại chính xác những gì có trong file.`;
 
-          const response = await ai.models.generateContent({
+          const response = await safeGenerateContent({
               model: advSettings.aiModel,
-              contents: {
-                  parts: [
-                      { inlineData: { mimeType: uploadedFile.type, data: base64Data } },
-                      { text: extractPrompt }
-                  ]
-              },
-              config: {
-                  systemInstruction: systemInstruction.instruction
-              }
+              contents: extractPrompt,
+              systemInstruction: systemInstruction.instruction
           });
 
-          if (response.usageMetadata) {
+          if (response.usageMetadata?.totalTokenCount) {
               updateTokenUsage(response.usageMetadata.totalTokenCount);
           }
 

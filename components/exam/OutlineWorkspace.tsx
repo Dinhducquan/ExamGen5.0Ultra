@@ -16,6 +16,7 @@ import { useSettings } from '../../hooks/useSettings';
 import { exportToDocx } from '../../utils/docxExporter';
 import { generateAutoFilename } from '../../utils/filenameUtils';
 import { getStudentTargetContextDirective } from '../../lib/studentTargetPrompt';
+import { safeGenerateContent } from '../../lib/gemini';
 
 interface OutlineWorkspaceProps {
   examData: GeneratedExamData | null;
@@ -104,15 +105,13 @@ ${JSON.stringify(examData.topics, null, 2)}
 Hãy trả về toàn bộ nội dung đề cương (từ Phần I đến Phần IV) dưới dạng một chuỗi HTML duy nhất, có định dạng đẹp, rõ ràng, sử dụng các thẻ \`<h4>\`, \`<ul>\`, \`<li>\`, \`<strong>\`, \`<p>\`, và \`<br/>\`.
 ${getStudentTargetContextDirective(settings.studentTarget)}`;
 
-        const response = await ai.models.generateContent({
+        const response = await safeGenerateContent({
             model: advSettings.aiModel,
             contents: prompt,
-            config: {
-              systemInstruction: systemInstruction.instruction,
-            }
+            systemInstruction: systemInstruction.instruction,
         });
 
-        if (response.usageMetadata) {
+        if (response.usageMetadata?.totalTokenCount) {
             updateTokenUsage(response.usageMetadata.totalTokenCount);
         }
 
