@@ -155,7 +155,7 @@ export default function GeminiWorkspace({ updateTokenUsage }: GeminiWorkspacePro
 
       const response = await safeGenerateContent({
         apiKey: userApiKey,
-        model: advSettings.aiModel || 'gemini-3.7-flash',
+        model: advSettings.aiModel || 'gemini-3.8-flash',
         contents: promptText,
         systemInstruction: systemInstruction.instruction,
         reasoningEffort: advSettings.aiReasoningEffort,

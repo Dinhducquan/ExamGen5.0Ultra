@@ -111,7 +111,7 @@ export const AIModelCenterModal: React.FC<AIModelCenterModalProps> = ({ isOpen, 
     setSandboxResult(null);
     try {
       const res = await safeGenerateContent({
-        model: advSettings.aiModel || 'gemini-3.7-flash',
+        model: advSettings.aiModel || 'gemini-3.8-flash',
         contents: testPrompt,
         enableFallback: true,
         maxRetries: 2
@@ -170,7 +170,7 @@ export const AIModelCenterModal: React.FC<AIModelCenterModalProps> = ({ isOpen, 
                 : 'text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
             }`}
           >
-            <KeySquare className="w-4 h-4" /> 5 Nhà Cung Cấp & Key (17 Models)
+            <KeySquare className="w-4 h-4" /> 5 Nhà Cung Cấp & Key ({ALL_AI_MODELS.length} Models)
           </button>
 
           <button
@@ -317,7 +317,7 @@ export const AIModelCenterModal: React.FC<AIModelCenterModalProps> = ({ isOpen, 
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-2">
                     <Brain className="w-4 h-4 text-purple-600" />
-                    Danh Sách 17 Mô Hình AI Trong Hệ Thống ({filteredModels.length} mô hình)
+                    Danh Sách {ALL_AI_MODELS.length} Mô Hình AI Trong Hệ Thống ({filteredModels.length} mô hình)
                   </h3>
 
                   <div className="flex items-center gap-1.5 overflow-x-auto text-xs">
@@ -329,7 +329,7 @@ export const AIModelCenterModal: React.FC<AIModelCenterModalProps> = ({ isOpen, 
                           : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
                       }`}
                     >
-                      Tất cả (17)
+                      Tất cả ({ALL_AI_MODELS.length})
                     </button>
                     {(Object.keys(AI_PROVIDERS) as AIProvider[]).map((pKey) => (
                       <button

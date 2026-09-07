@@ -4,7 +4,7 @@ export type { AIModelConfig as GeminiModelConfig };
 
 export const GEMINI_MODELS = ALL_AI_MODELS;
 
-export const DEFAULT_GEMINI_MODEL = 'gemini-3.7-flash';
+export const DEFAULT_GEMINI_MODEL = 'gemini-3.8-flash';
 
 export interface ModelSyncStatus {
   lastChecked: string;
@@ -28,6 +28,6 @@ export async function syncGeminiModelRegistry(apiKey?: string): Promise<ModelSyn
     status: 'synced',
     latencyMs: latency,
     availableModelsCount: ALL_AI_MODELS.length,
-    message: `Đã đồng bộ thành công Trung tâm 17 mô hình AI (Google Gemini, OpenAI, Copilot, Claude & DeepSeek). Độ trễ: ${latency}ms.`
+    message: `Đã đồng bộ thành công Trung tâm ${ALL_AI_MODELS.length} mô hình AI (Google Gemini 3.8 Flash, OpenAI, Copilot, Claude & DeepSeek). Độ trễ: ${latency}ms.`
   };
 }

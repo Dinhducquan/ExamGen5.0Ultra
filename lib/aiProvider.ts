@@ -90,7 +90,7 @@ async function callSingleProvider(
     const config: any = { ...generationConfig };
     if (systemInstruction) config.systemInstruction = systemInstruction;
 
-    if (modelConfig.id.includes('3.7-flash') || modelConfig.id.includes('3.1-pro') || modelConfig.id.includes('2.5-pro')) {
+    if (modelConfig.id.includes('3.8-flash') || modelConfig.id.includes('3.7-flash') || modelConfig.id.includes('3.1-pro') || modelConfig.id.includes('2.5-pro')) {
       if (reasoningEffort === 'low') config.thinkingConfig = { thinkingBudget: 1024 };
       else if (reasoningEffort === 'high') config.thinkingConfig = { thinkingBudget: 4096 };
     }
@@ -289,7 +289,7 @@ export async function safeGenerateContent(options: GenerateOptions): Promise<Gen
   const startTime = Date.now();
   const {
     apiKey,
-    model = 'gemini-3.7-flash',
+    model = 'gemini-3.8-flash',
     contents,
     systemInstruction,
     generationConfig,

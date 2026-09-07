@@ -868,7 +868,7 @@ export default function ExamStructureWorkspace({ setExamData, setCurrentPage, up
                 }
                 
                 const response = await ai.models.generateContent({
-                    model: advSettings.aiModel || 'gemini-3.7-flash',
+                    model: advSettings.aiModel || 'gemini-3.8-flash',
                     contents: prompt,
                     config: {
                         responseMimeType: "application/json",
@@ -966,7 +966,7 @@ YÊU CẦU ĐẦU RA: Kết quả trả về PHẢI là một đối tượng JS
                     };
 
                     const response = await ai.models.generateContent({
-                        model: advSettings.aiModel || 'gemini-3.7-flash',
+                        model: advSettings.aiModel || 'gemini-3.8-flash',
                         contents: fullExamPrompt,
                         config: {
                             responseMimeType: "application/json",
@@ -1031,7 +1031,7 @@ YÊU CẦU ĐẦU RA: Kết quả trả về PHẢI là một đối tượng JS
                         }
                         
                         const response = await ai.models.generateContent({
-                            model: advSettings.aiModel || 'gemini-3.7-flash',
+                            model: advSettings.aiModel || 'gemini-3.8-flash',
                             contents: { parts },
                             config: {
                                  responseMimeType: "application/json",
@@ -1073,7 +1073,7 @@ YÊU CẦU BẮT BUỘC:
 Ma trận: \`\`\`json\n${JSON.stringify(topics, null, 2)}\n\`\`\``;
                     
                     const qResponse = await ai.models.generateContent({
-                        model: advSettings.aiModel || 'gemini-3.7-flash',
+                        model: advSettings.aiModel || 'gemini-3.8-flash',
                         contents: questionsPrompt,
                         config: {
                              responseMimeType: "application/json",

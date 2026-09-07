@@ -84,20 +84,35 @@ export interface AIModelConfig {
 export const ALL_AI_MODELS: AIModelConfig[] = [
   // --- GOOGLE GEMINI ---
   {
+    id: 'gemini-3.8-flash',
+    name: 'Gemini 3.8 Flash',
+    provider: 'gemini',
+    providerName: 'Google Gemini',
+    generation: 'Gen 3.8',
+    badge: 'MỚI NHẤT 3.8 • KHUYÊN DÙNG',
+    badgeType: 'latest',
+    speed: 'Siêu tốc (0.3s - 0.7s)',
+    accuracy: 'Tối ưu vượt trội (99.9%)',
+    contextWindow: '1,000,000 Tokens',
+    description: 'Mô hình thế hệ Gemini 3.8 Flash mới nhất của Google, tối ưu hóa tốc độ phản hồi cực nhanh cùng khả năng suy luận sắc bén, chuẩn hóa ma trận CV 7991 và tạo câu hỏi thi chính xác tuyệt đối.',
+    recommendedFor: 'Tất cả các môn học, tạo đề trắc nghiệm, ma trận CV 7991, Ngữ văn, STEM và tạo đề cương.',
+    isLatest: true,
+    isDefault: true,
+    supportsThinking: true,
+  },
+  {
     id: 'gemini-3.7-flash',
     name: 'Gemini 3.7 Flash',
     provider: 'gemini',
     providerName: 'Google Gemini',
     generation: 'Gen 3.7',
-    badge: 'MỚI NHẤT • KHUYÊN DÙNG',
-    badgeType: 'latest',
+    badge: 'TỐC ĐỘ CAO • ỔN ĐỊNH',
+    badgeType: 'stable',
     speed: 'Siêu tốc (0.4s - 0.9s)',
     accuracy: 'Tối ưu vượt trội (99.8%)',
     contextWindow: '1,000,000 Tokens',
-    description: 'Mô hình thế hệ 3.7 tối tân nhất của Google, kết hợp tốc độ cực nhanh với khả năng suy luận hybrid reasoning, chuẩn hóa cấu trúc ma trận và câu hỏi thi.',
+    description: 'Mô hình thế hệ 3.7 của Google, kết hợp tốc độ cực nhanh với khả năng suy luận hybrid reasoning, chuẩn hóa cấu trúc ma trận và câu hỏi thi.',
     recommendedFor: 'Tất cả các môn học, tạo đề trắc nghiệm, ma trận CV 7991, Ngữ văn và tạo đề cương.',
-    isLatest: true,
-    isDefault: true,
     supportsThinking: true,
   },
   {
@@ -324,10 +339,11 @@ export const ALL_AI_MODELS: AIModelConfig[] = [
   }
 ];
 
-export const DEFAULT_PRIMARY_MODEL = 'gemini-3.7-flash';
+export const DEFAULT_PRIMARY_MODEL = 'gemini-3.8-flash';
 
 // Mặc định chuỗi mô hình dự phòng (Default Fallback Chain)
 export const DEFAULT_FALLBACK_CHAIN: string[] = [
+  'gemini-3.8-flash',
   'gemini-3.7-flash',
   'gemini-3.1-flash-lite',
   'deepseek-v3',

@@ -25,7 +25,7 @@ export const ModelSelectorMenu: React.FC<ModelSelectorMenuProps> = ({
   const [selectedProvider, setSelectedProvider] = useState<AIProvider | 'all'>('all');
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const currentModelId = advSettings.aiModel || 'gemini-3.7-flash';
+  const currentModelId = advSettings.aiModel || 'gemini-3.8-flash';
   const currentModel = ALL_AI_MODELS.find(m => m.id === currentModelId) || ALL_AI_MODELS[0];
 
   // Close dropdown on click outside
@@ -105,7 +105,7 @@ export const ModelSelectorMenu: React.FC<ModelSelectorMenuProps> = ({
                 <div className="flex items-center gap-2">
                   <Brain className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                   <span className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-200">
-                    Trung Tâm Mô Hình AI (17 Models)
+                    Trung Tâm Mô Hình AI ({ALL_AI_MODELS.length} Models)
                   </span>
                 </div>
                 <button
@@ -250,7 +250,7 @@ export const ModelSelectorMenu: React.FC<ModelSelectorMenuProps> = ({
                 : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'
             }`}
           >
-            Tất cả (17)
+            Tất cả ({ALL_AI_MODELS.length})
           </button>
           {(Object.keys(AI_PROVIDERS) as AIProvider[]).map((p) => (
             <button
