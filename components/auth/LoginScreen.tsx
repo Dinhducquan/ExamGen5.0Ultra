@@ -152,6 +152,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, users }) => {
         usageCount: 0,
         tokenUsage: 0,
         usageLimit: 10,
+        isLicensed: false,
       };
 
       // Lưu trữ tập trung trực tiếp lên Cloud Firestore

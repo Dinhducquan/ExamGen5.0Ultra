@@ -147,9 +147,9 @@ const SecurityPanel: React.FC<{
                 <SettingItem title="Quản lý người dùng" description="Thêm, sửa, xóa, và phân quyền cho người dùng.">
                     <Button variant="outline" onClick={() => setCurrentPage('users')}><UsersIcon className="w-4 h-4 mr-2"/>Đi đến trang quản lý</Button>
                 </SettingItem>
-                <SettingItem title="Quản lý giấy phép" description="Tạo và quản lý key bản quyền cho người dùng.">
+                <SettingItem title="Quản lý giấy phép & Bản quyền" description="Tạo và kích hoạt bản quyền PRO theo tài khoản giáo viên (Đồng bộ Cloud Firestore, không phụ thuộc máy).">
                     <Button variant="outline" onClick={onGenerateLicenseClick}>
-                        <KeySquare className="w-4 h-4 mr-2"/>Tạo Key
+                        <KeySquare className="w-4 h-4 mr-2 text-indigo-500"/>Trung Tâm Bản Quyền
                     </Button>
                 </SettingItem>
                 <SettingItem title="Đổi mật khẩu" description="Thay đổi mật khẩu đăng nhập hiện tại của bạn.">

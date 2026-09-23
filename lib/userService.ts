@@ -45,6 +45,7 @@ export const INITIAL_DEFAULT_USERS: User[] = [
     avatar: "https://i.pravatar.cc/150?u=thuyvo",
     usageCount: 1,
     usageLimit: 10,
+    isLicensed: false,
     tokenUsage: 0
   },
   {
@@ -61,6 +62,7 @@ export const INITIAL_DEFAULT_USERS: User[] = [
     avatar: "https://i.pravatar.cc/150?u=teacher",
     usageCount: 0,
     usageLimit: 5,
+    isLicensed: false,
     tokenUsage: 0
   },
   {
@@ -77,6 +79,7 @@ export const INITIAL_DEFAULT_USERS: User[] = [
     avatar: "https://i.pravatar.cc/150?u=teacher1",
     usageCount: 0,
     usageLimit: 5,
+    isLicensed: false,
     tokenUsage: 0
   },
   {
@@ -93,6 +96,7 @@ export const INITIAL_DEFAULT_USERS: User[] = [
     avatar: "https://i.pravatar.cc/150?u=teacher2",
     usageCount: 0,
     usageLimit: 5,
+    isLicensed: false,
     tokenUsage: 0
   }
 ];

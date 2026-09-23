@@ -12,6 +12,10 @@ export type User = {
   usageCount: number;
   tokenUsage: number;
   usageLimit?: number;
+  isLicensed?: boolean;
+  licenseKey?: string;
+  licenseActivatedAt?: string;
+  licenseType?: string;
   status: 'Hoạt động' | 'Tạm khóa';
   lastLogin: string;
   avatar: string;

@@ -32,30 +32,15 @@ import LicenseKeyModal from './components/auth/LicenseKeyModal';
 import { Lock } from './components/icons';
 import ApiKeyModal from './components/auth/ApiKeyModal';
 import { subscribeUsersFromCloud, updateUserInCloud, INITIAL_DEFAULT_USERS } from './lib/userService';
+import { checkIsUserLicensed } from './lib/licenseService';
 
 const LOGGED_IN_USER_KEY = 'examgen_logged_in_user';
 const USERS_STORAGE_KEY = 'examgen_users_list';
-const LICENSE_KEY = 'examgen_license_key';
 const LAST_LOGIN_USERNAME_KEY = 'examgen_last_login_username';
 const API_KEY_STORAGE_KEY = 'examgen_gemini_api_key';
-const MACHINE_ID_KEY = 'examgen_machine_id';
 const DEVICE_USAGE_STORAGE_KEY = 'examgen_device_usage';
 
 const MOCK_USERS: User[] = INITIAL_DEFAULT_USERS;
-
-const getMachineId = (): string => {
-  let machineId = localStorage.getItem(MACHINE_ID_KEY);
-  if (!machineId) {
-    machineId = 'MACHINE-' + Date.now() + '-' + Math.random().toString(36).substring(2, 11);
-    localStorage.setItem(MACHINE_ID_KEY, machineId);
-  }
-  return machineId;
-};
-
-const generateKeyForMachine = (machineId: string): string => {
-  if (!machineId) return '';
-  return 'EG-ULTRA-' + btoa(machineId).split('').reverse().join('');
-};
 
 
 function App() {
@@ -176,20 +161,17 @@ function App() {
         return;
     }
 
-    // For non-admins (Teachers), first check for a valid license key.
-    const existingKey = localStorage.getItem(LICENSE_KEY);
-    const currentMachineId = getMachineId();
-    const expectedKey = generateKeyForMachine(currentMachineId);
-    
-    if (existingKey === expectedKey) {
-        // User is licensed on this machine. Convert to full user if they were a trial user.
-        const licensedUser = { ...user };
+    // 1. Kiểm tra bản quyền theo tài khoản (KHÔNG CẦN MACHINE ID)
+    const isLicensed = checkIsUserLicensed(user);
+    if (isLicensed) {
+        // Tài khoản đã được cấp bản quyền PRO vĩnh viễn trên Cloud
+        const licensedUser = { ...user, isLicensed: true };
         delete licensedUser.usageLimit;
         completeLogin(licensedUser);
         return;
     }
 
-    // If no valid license, check if it's a trial user.
+    // 2. Nếu là người dùng dùng thử (trial user)
     const isTrialUser = user.usageLimit !== undefined;
     if (isTrialUser) {
         let deviceUsage: { [key: string]: number } = {};
@@ -201,36 +183,41 @@ function App() {
         }
 
         const deviceUsageCount = deviceUsage[user.username] || 0;
-        const usageLimit = user.usageLimit!;
+        const usageLimit = user.usageLimit || 5;
 
         if (deviceUsageCount < usageLimit) {
-            // Trial is still active on this device.
+            // Lượt dùng thử vẫn còn
             const newDeviceUsageCount = deviceUsageCount + 1;
             deviceUsage[user.username] = newDeviceUsageCount;
             localStorage.setItem(DEVICE_USAGE_STORAGE_KEY, JSON.stringify(deviceUsage));
             
-            // Update the user object for this session to show the correct usage count.
             const updatedUserForLogin = { ...user, usageCount: newDeviceUsageCount };
             completeLogin(updatedUserForLogin);
         } else {
-            // Trial has expired on this device.
+            // Đã hết lượt dùng thử: mở màn hình kích hoạt bản quyền theo tài khoản
             setUserAwaitingLicense(user);
         }
         return;
     }
 
-    // If we reach here, the user is a Teacher without a usageLimit (activated)
-    // but does not have a valid license key on this machine. They must activate.
-    setUserAwaitingLicense(user);
+    // Mặc định đăng nhập nếu không giới hạn
+    completeLogin(user);
   };
   
-  const handleLicenseSuccess = (key: string) => {
-      localStorage.setItem(LICENSE_KEY, key);
-      if (userAwaitingLicense) {
-          // Convert trial user to full user by removing usageLimit
-          const licensedUser = { ...userAwaitingLicense };
+  const handleLicenseSuccess = (key: string, activatedUser?: User) => {
+      if (activatedUser) {
+          setUsers(prev => prev.map(u => u.id === activatedUser.id ? activatedUser : u));
+          completeLogin(activatedUser);
+      } else if (userAwaitingLicense) {
+          const licensedUser: User = { 
+            ...userAwaitingLicense, 
+            isLicensed: true, 
+            licenseKey: key, 
+            licenseType: 'Vĩnh viễn (Đồng bộ Cloud)',
+            licenseActivatedAt: new Date().toISOString() 
+          };
           delete licensedUser.usageLimit;
-          
+          setUsers(prev => prev.map(u => u.id === licensedUser.id ? licensedUser : u));
           completeLogin(licensedUser);
       }
       setUserAwaitingLicense(null);
@@ -310,7 +297,13 @@ function App() {
   
   const AppContent = () => {
       if (userAwaitingLicense) {
-        return <LicenseKeyModal onSuccess={handleLicenseSuccess} />;
+        return (
+          <LicenseKeyModal 
+            user={userAwaitingLicense}
+            onSuccess={handleLicenseSuccess} 
+            onCancel={() => setUserAwaitingLicense(null)}
+          />
+        );
       }
       
       if (!isAuthenticated) {

@@ -13,13 +13,16 @@ import {
   ChevronDown,
   Command,
   HelpCircle,
-  FileCheck
+  FileCheck,
+  ShieldCheck,
+  Zap
 } from "lucide-react";
 import { Button } from "../ui/Button";
 import { useToast } from "../../hooks/useToast";
 import { Page, User } from "../../types";
 import { useI18n } from "../../hooks/useI18n";
-import MachineIdModal from "../auth/MachineIdModal";
+import LicenseStatusModal from "../auth/LicenseStatusModal";
+import { checkIsUserLicensed } from "../../lib/licenseService";
 import { ModelSelectorMenu } from "../ai/ModelSelectorMenu";
 import { CommandSearchModal } from "./CommandSearchModal";
 
@@ -36,7 +39,7 @@ export default function HeaderNav({ setCurrentPage, handleLogout, currentUser, h
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
-  const [isMachineIdModalOpen, setIsMachineIdModalOpen] = useState(false);
+  const [isLicenseModalOpen, setIsLicenseModalOpen] = useState(false);
   const [isCommandModalOpen, setIsCommandModalOpen] = useState(false);
 
   const profileMenuRef = useRef<HTMLDivElement>(null);
@@ -75,7 +78,8 @@ export default function HeaderNav({ setCurrentPage, handleLogout, currentUser, h
     window.print();
   };
 
-  const isTrialUser = currentUser.role === 'Giáo viên' && currentUser.usageLimit !== undefined;
+  const isLicensed = checkIsUserLicensed(currentUser);
+  const isTrialUser = currentUser.role === 'Giáo viên' && !isLicensed;
 
   return (
     <>
@@ -189,23 +193,28 @@ export default function HeaderNav({ setCurrentPage, handleLogout, currentUser, h
             )}
           </div>
 
-          {/* Machine ID License check button */}
+          {/* License Status & Info button */}
           <button
-            onClick={() => setIsMachineIdModalOpen(true)}
-            className="p-2 rounded-xl text-stone-600 hover:text-stone-900 hover:bg-stone-200/50 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-white/[0.06] transition-colors"
-            title={t('header.machineId', 'Lấy Machine ID')}
+            onClick={() => setIsLicenseModalOpen(true)}
+            className={`p-2 rounded-xl transition-colors ${
+              isLicensed
+                ? 'text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/30'
+                : 'text-stone-600 hover:text-stone-900 hover:bg-stone-200/50 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-white/[0.06]'
+            }`}
+            title={isLicensed ? 'Bản quyền PRO Vĩnh viễn (Đã kích hoạt)' : 'Thông tin bản quyền & Kích hoạt'}
           >
-            <KeySquare className="w-4 h-4" />
+            {isLicensed ? <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> : <KeySquare className="w-4 h-4" />}
           </button>
 
           {/* Activation pill for trial teachers */}
           {isTrialUser && (
             <button
               onClick={handleRequestActivation}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/30 hover:bg-amber-500/25 transition-colors"
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/30 hover:bg-amber-500/25 transition-colors shadow-xs"
+              title="Kích hoạt Bản quyền PRO ngay (Không cần mã máy)"
             >
-              <KeySquare className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">{t('header.activateAccountButton', 'Kích hoạt')}</span>
+              <Zap className="w-3.5 h-3.5 text-amber-500" />
+              <span className="hidden sm:inline">{t('header.activateAccountButton', 'Kích hoạt PRO')}</span>
             </button>
           )}
 
@@ -270,7 +279,13 @@ export default function HeaderNav({ setCurrentPage, handleLogout, currentUser, h
       </header>
 
       {/* Modals */}
-      <MachineIdModal isOpen={isMachineIdModalOpen} onClose={() => setIsMachineIdModalOpen(false)} />
+      <LicenseStatusModal 
+        isOpen={isLicenseModalOpen} 
+        onClose={() => setIsLicenseModalOpen(false)} 
+        currentUser={currentUser}
+        onOpenActivation={handleRequestActivation}
+        onOpenLicenseManager={() => setCurrentPage('users')}
+      />
       <CommandSearchModal 
         isOpen={isCommandModalOpen} 
         onClose={() => setIsCommandModalOpen(false)} 

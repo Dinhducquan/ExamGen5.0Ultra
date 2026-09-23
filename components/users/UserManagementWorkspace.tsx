@@ -15,6 +15,7 @@ import { SelectWithOther } from '../ui/SelectWithOther';
 import { createUserInCloud, updateUserInCloud, deleteUserInCloud, deleteMultipleUsersInCloud } from '../../lib/userService';
 import { compressAvatarImage, PRESET_AVATARS } from '../../lib/avatarUtils';
 import LicenseGeneratorModal from '../auth/LicenseGeneratorModal';
+import { checkIsUserLicensed, activateUserAccount, deactivateUserAccount } from '../../lib/licenseService';
 
 const DEFAULT_ITEMS_PER_PAGE = 10;
 const FILTERS_STORAGE_KEY = 'form_user_management_filters';
@@ -218,6 +219,7 @@ export default function UserManagementWorkspace({ users, setUsers, currentUser, 
                     usageCount: 0,
                     tokenUsage: 0,
                     usageLimit: typedUserData.usageLimit || 5,
+                    isLicensed: typedUserData.role === 'Quản trị hệ thống',
                 };
                 
                 await createUserInCloud(newUser);
@@ -363,6 +365,53 @@ export default function UserManagementWorkspace({ users, setUsers, currentUser, 
         setSelectedIds(new Set());
         setIsBulkRoleModalOpen(false);
     };
+
+    const handleDirectActivateUser = async (userToActivate: User) => {
+        try {
+            const updated = await activateUserAccount(userToActivate);
+            setUsers(prevUsers => prevUsers.map(u => u.id === userToActivate.id ? updated : u));
+            setRecentlyModifiedId(userToActivate.id);
+            addToast(`⚡ Đã kích hoạt bản quyền PRO vĩnh viễn cho ${userToActivate.name} (Đồng bộ Cloud)!`);
+        } catch (err: any) {
+            addToast(`Lỗi kích hoạt: ${err?.message || 'Không thể cập nhật'}`);
+        }
+        setOpenActionMenuId(null);
+    };
+
+    const handleRevertUserToTrial = async (userToRevert: User) => {
+        try {
+            const updated = await deactivateUserAccount(userToRevert, 5);
+            setUsers(prevUsers => prevUsers.map(u => u.id === userToRevert.id ? updated : u));
+            setRecentlyModifiedId(userToRevert.id);
+            addToast(`Đã chuyển tài khoản ${userToRevert.name} về chế độ Dùng thử (5 lượt).`);
+        } catch (err: any) {
+            addToast(`Lỗi: ${err?.message || 'Không thể cập nhật'}`);
+        }
+        setOpenActionMenuId(null);
+    };
+
+    const handleBulkActivateLicenses = async () => {
+        const ids = Array.from(selectedIds);
+        if (ids.length === 0) return;
+        const targetUsers = users.filter(u => ids.includes(u.id));
+        let count = 0;
+        const updatedList: User[] = [];
+        for (const u of targetUsers) {
+            try {
+                const updated = await activateUserAccount(u);
+                updatedList.push(updated);
+                count++;
+            } catch (err) {
+                console.error(err);
+            }
+        }
+        setUsers(prev => prev.map(u => {
+            const found = updatedList.find(x => x.id === u.id);
+            return found || u;
+        }));
+        addToast(`⚡ Đã kích hoạt bản quyền PRO cho ${count} tài khoản được chọn!`);
+        setSelectedIds(new Set());
+    };
     
     const getRoleBadgeVariant = (role: User['role']) => (
         { 'Quản trị hệ thống': 'danger', 'Giáo viên': 'info' }[role] || 'default'
@@ -381,8 +430,11 @@ export default function UserManagementWorkspace({ users, setUsers, currentUser, 
                             <Users className="w-6 h-6" /> Quản lý người dùng
                         </CardTitle>
                         {selectedIds.size > 0 && (
-                            <div className="mt-2 flex items-center gap-2">
+                            <div className="mt-2 flex items-center gap-2 flex-wrap">
                                 <span className="text-sm text-slate-500">{selectedIds.size} mục đã chọn</span>
+                                <Button variant="outline" size="sm" className="text-emerald-600 dark:text-emerald-400 border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20" onClick={handleBulkActivateLicenses}>
+                                    <Zap className="w-4 h-4 mr-1.5 text-emerald-500" /> Kích hoạt PRO đã chọn
+                                </Button>
                                 <Button variant="outline" size="sm" className="text-indigo-600 dark:text-indigo-400 border-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20" onClick={() => setIsBulkRoleModalOpen(true)}>
                                     <Users className="w-4 h-4 mr-2" /> Thay đổi vai trò
                                 </Button>
@@ -396,9 +448,9 @@ export default function UserManagementWorkspace({ users, setUsers, currentUser, 
                         <Button 
                             variant="outline" 
                             onClick={() => setIsLicenseGeneratorOpen(true)}
-                            className="border-amber-500/60 text-amber-700 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-950/30"
+                            className="border-indigo-500/60 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/30"
                         >
-                            <KeySquare className="w-4 h-4 mr-2 text-amber-500" /> Cấp Key / Kích hoạt máy
+                            <KeySquare className="w-4 h-4 mr-2 text-indigo-500" /> Trung Tâm Cấp Phép & Bản Quyền
                         </Button>
                         <Button onClick={() => setModalState({ mode: 'add' })}>
                             <Plus className="w-4 h-4 mr-2" /> Thêm người dùng mới
@@ -462,6 +514,7 @@ export default function UserManagementWorkspace({ users, setUsers, currentUser, 
                                     <TableHead>Họ và tên</TableHead>
                                     <TableHead>Tên đăng nhập</TableHead>
                                     <TableHead>Vai trò</TableHead>
+                                    <TableHead>Bản quyền</TableHead>
                                     <TableHead>Thống kê sử dụng</TableHead>
                                     <TableHead>Trạng thái</TableHead>
                                     <TableHead className="text-right">Hành động</TableHead>
@@ -470,6 +523,7 @@ export default function UserManagementWorkspace({ users, setUsers, currentUser, 
                             <TableBody>
                                 {paginatedUsers.map(user => {
                                     const isCurrentUser = user.id === currentUser.id;
+                                    const isLicensed = checkIsUserLicensed(user);
                                     return (
                                         <TableRow 
                                             key={user.id} 
@@ -490,6 +544,32 @@ export default function UserManagementWorkspace({ users, setUsers, currentUser, 
                                             </TableCell>
                                             <TableCell><Badge variant={getRoleBadgeVariant(user.role)}>{user.role}</Badge></TableCell>
                                             <TableCell>
+                                                {user.role === 'Quản trị hệ thống' ? (
+                                                    <span className="text-[11px] font-bold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/40 px-2 py-0.5 rounded-full border border-purple-200 dark:border-purple-800">
+                                                        Quản trị viên
+                                                    </span>
+                                                ) : isLicensed ? (
+                                                    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+                                                        PRO Vĩnh viễn
+                                                    </span>
+                                                ) : (
+                                                    <div className="flex items-center gap-1.5">
+                                                        <span className="text-[11px] font-medium text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded-full border border-amber-200 dark:border-amber-800">
+                                                            Dùng thử ({user.usageCount || 0}/{user.usageLimit || 5})
+                                                        </span>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => handleDirectActivateUser(user)}
+                                                            className="h-6 px-1.5 text-[10px] font-bold text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
+                                                            title="Kích hoạt PRO vĩnh viễn ngay (Không cần Machine ID)"
+                                                        >
+                                                            <Zap className="w-3 h-3 mr-0.5 text-amber-500" /> Kích hoạt
+                                                        </Button>
+                                                    </div>
+                                                )}
+                                            </TableCell>
+                                            <TableCell>
                                                 <div className="text-sm">
                                                     Logins: {user.usageCount}
                                                     {user.role !== 'Quản trị hệ thống' && user.usageLimit != null && ` / ${user.usageLimit}`}
@@ -505,9 +585,20 @@ export default function UserManagementWorkspace({ users, setUsers, currentUser, 
                                                         <MoreHorizontal className="w-5 h-5" />
                                                     </Button>
                                                     {openActionMenuId === user.id && (
-                                                        <div ref={actionMenuRef} className="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white dark:bg-slate-800 ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
+                                                        <div ref={actionMenuRef} className="origin-top-right absolute right-0 mt-2 w-60 rounded-md shadow-lg bg-white dark:bg-slate-800 ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
                                                             <div className="py-1">
                                                                 <button onClick={() => { setModalState({ mode: 'edit', user }); setOpenActionMenuId(null); }} className="w-full text-left flex items-center gap-3 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700"><Edit size={16}/> Chỉnh sửa</button>
+                                                                {user.role !== 'Quản trị hệ thống' && (
+                                                                    isLicensed ? (
+                                                                        <button onClick={() => handleRevertUserToTrial(user)} className="w-full text-left flex items-center gap-3 px-4 py-2 text-sm text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 font-medium">
+                                                                            <Zap size={16} className="text-amber-500"/> Chuyển về Dùng thử (5 lượt)
+                                                                        </button>
+                                                                    ) : (
+                                                                        <button onClick={() => handleDirectActivateUser(user)} className="w-full text-left flex items-center gap-3 px-4 py-2 text-sm text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 font-medium">
+                                                                            <Zap size={16} className="text-amber-500"/> Kích hoạt bản quyền PRO
+                                                                        </button>
+                                                                    )
+                                                                )}
                                                                 <button onClick={() => handleToggleRole(user)} disabled={isCurrentUser} title={isCurrentUser ? "Không thể tự thay đổi vai trò" : ""} className="w-full text-left flex items-center gap-3 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"><Zap size={16}/> Đổi vai trò</button>
                                                                 <button onClick={() => handleToggleStatus(user)} disabled={isCurrentUser} title={isCurrentUser ? "Không thể tự khóa tài khoản" : ""} className="w-full text-left flex items-center gap-3 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed">
                                                                     {user.status === 'Hoạt động' ? <><Lock size={16}/> Tạm khóa</> : <><Unlock size={16}/> Kích hoạt</>}
@@ -588,6 +679,10 @@ export default function UserManagementWorkspace({ users, setUsers, currentUser, 
             <LicenseGeneratorModal
                 isOpen={isLicenseGeneratorOpen}
                 onClose={() => setIsLicenseGeneratorOpen(false)}
+                users={users}
+                onUserUpdated={(updatedUser) => {
+                    setUsers(prev => prev.map(u => u.id === updatedUser.id ? updatedUser : u));
+                }}
             />
         </>
     );
