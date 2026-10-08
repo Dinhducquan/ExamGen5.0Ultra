@@ -9,12 +9,14 @@ import AIModelCenterModal from './AIModelCenterModal';
 interface ModelSelectorMenuProps {
   variant?: 'compact' | 'full' | 'header' | 'inline';
   onModelChange?: (modelId: string) => void;
+  onOpenConfig?: (tab?: 'apikeys' | 'models') => void;
   className?: string;
 }
 
 export const ModelSelectorMenu: React.FC<ModelSelectorMenuProps> = ({
   variant = 'compact',
   onModelChange,
+  onOpenConfig,
   className = '',
 }) => {
   const { advSettings, setAdvSettings } = useAdvancedSettings();
@@ -111,11 +113,15 @@ export const ModelSelectorMenu: React.FC<ModelSelectorMenuProps> = ({
                 <button
                   onClick={() => {
                     setIsOpen(false);
-                    setIsCenterOpen(true);
+                    if (onOpenConfig) {
+                      onOpenConfig('models');
+                    } else {
+                      setIsCenterOpen(true);
+                    }
                   }}
-                  className="text-[11px] flex items-center gap-1 text-indigo-600 dark:text-indigo-400 hover:underline font-bold"
+                  className="text-[11px] flex items-center gap-1 text-indigo-600 dark:text-indigo-400 hover:underline font-bold cursor-pointer"
                 >
-                  <Sliders className="w-3 h-3" /> Cấu hình
+                  <Sliders className="w-3 h-3" /> Cấu hình API & Models
                 </button>
               </div>
 
@@ -185,9 +191,13 @@ export const ModelSelectorMenu: React.FC<ModelSelectorMenuProps> = ({
                 <button
                   onClick={() => {
                     setIsOpen(false);
-                    setIsCenterOpen(true);
+                    if (onOpenConfig) {
+                      onOpenConfig('models');
+                    } else {
+                      setIsCenterOpen(true);
+                    }
                   }}
-                  className="font-bold text-indigo-600 dark:text-indigo-400 hover:underline"
+                  className="font-bold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
                 >
                   Mở Trung Tâm Mô Hình AI →
                 </button>

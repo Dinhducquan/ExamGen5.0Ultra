@@ -25,6 +25,7 @@ import LicenseStatusModal from "../auth/LicenseStatusModal";
 import { checkIsUserLicensed } from "../../lib/licenseService";
 import { ModelSelectorMenu } from "../ai/ModelSelectorMenu";
 import { CommandSearchModal } from "./CommandSearchModal";
+import AIModelCenterModal from "../ai/AIModelCenterModal";
 
 interface HeaderNavProps {
   setCurrentPage: (page: Page) => void;
@@ -41,6 +42,19 @@ export default function HeaderNav({ setCurrentPage, handleLogout, currentUser, h
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isLicenseModalOpen, setIsLicenseModalOpen] = useState(false);
   const [isCommandModalOpen, setIsCommandModalOpen] = useState(false);
+  const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
+  const [apiKeyModalTab, setApiKeyModalTab] = useState<'apikeys' | 'models'>('apikeys');
+  const [hasGeminiKey, setHasGeminiKey] = useState<boolean>(() => {
+    return !!localStorage.getItem('examgen_gemini_api_key');
+  });
+
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setHasGeminiKey(!!localStorage.getItem('examgen_gemini_api_key'));
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const langMenuRef = useRef<HTMLDivElement>(null);
@@ -101,16 +115,41 @@ export default function HeaderNav({ setCurrentPage, handleLogout, currentUser, h
         </div>
 
         {/* Right Action Icons & Controls */}
-        <div className="flex items-center gap-2 sm:gap-3 ml-auto">
+        <div className="flex items-center gap-1.5 sm:gap-2.5 ml-auto">
           {/* Dynamic Gemini Model Selection Pill */}
-          <ModelSelectorMenu variant="header" />
+          <ModelSelectorMenu 
+            variant="header" 
+            onOpenConfig={(tab) => {
+              setApiKeyModalTab(tab || 'models');
+              setIsApiKeyModalOpen(true);
+            }}
+          />
+
+          {/* Dedicated Header Button: Cấu hình API Key & Module AI */}
+          <button
+            type="button"
+            onClick={() => {
+              setApiKeyModalTab('apikeys');
+              setIsApiKeyModalOpen(true);
+            }}
+            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold bg-gradient-to-r from-amber-500/10 via-indigo-500/10 to-purple-500/10 hover:from-amber-500/20 hover:via-indigo-500/20 hover:to-purple-500/20 border border-indigo-200/90 dark:border-indigo-800/80 text-stone-800 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-300 transition-all shadow-xs cursor-pointer group flex-shrink-0"
+            title={t('header.configApiKeyTitle', 'Cấu hình API Key & Lựa chọn Module AI')}
+          >
+            <KeySquare className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400 group-hover:scale-110 transition-transform" />
+            <span className="hidden sm:inline">{t('header.configApiKey', 'Cấu hình API key')}</span>
+            <span className="sm:hidden">API Key</span>
+            <span 
+              className={`w-2 h-2 rounded-full ${hasGeminiKey ? 'bg-emerald-500 ring-1 ring-emerald-300 dark:ring-emerald-800' : 'bg-amber-500 animate-pulse'}`}
+              title={hasGeminiKey ? 'Đã cài đặt API Key' : 'Chưa có API Key'}
+            />
+          </button>
 
           {/* AI Generator Direct Button */}
           <Button
             variant="gradient"
             size="sm"
             onClick={() => setCurrentPage('ai-tool')}
-            className="hidden sm:inline-flex shadow-glow-sm"
+            className="hidden md:inline-flex shadow-glow-sm"
           >
             <Sparkles className="w-3.5 h-3.5" />
             <span>{t('header.aiGenerateExam', 'Tạo đề bằng AI')}</span>
@@ -254,12 +293,24 @@ export default function HeaderNav({ setCurrentPage, handleLogout, currentUser, h
                     <span>{t('header.myAccount', 'Tài khoản của tôi')}</span>
                   </button>
 
+                  <button
+                    onClick={() => { 
+                      setApiKeyModalTab('apikeys');
+                      setIsApiKeyModalOpen(true); 
+                      setIsProfileMenuOpen(false); 
+                    }}
+                    className="w-full text-left flex items-center gap-2.5 px-3 py-2 text-stone-700 hover:text-stone-950 hover:bg-stone-100 dark:text-slate-300 dark:hover:text-white dark:hover:bg-white/[0.06] rounded-xl transition-colors font-medium"
+                  >
+                    <KeySquare className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" /> 
+                    <span>{t('header.configApiKeyMenu', 'Cấu hình API Key & Module AI')}</span>
+                  </button>
+
                   {currentUser.role === 'Quản trị hệ thống' && (
                     <button
                       onClick={() => { setCurrentPage('settings'); setIsProfileMenuOpen(false); }}
                       className="w-full text-left flex items-center gap-2.5 px-3 py-2 text-stone-700 hover:text-stone-950 hover:bg-stone-100 dark:text-slate-300 dark:hover:text-white dark:hover:bg-white/[0.06] rounded-xl transition-colors"
                     >
-                      <Settings className="w-3.5 h-3.5 text-stone-500 dark:text-slate-400" />
+                      <Settings className="w-3.5 h-3.5 text-stone-500 dark:text-slate-400" /> 
                       <span>{t('header.systemSettings', 'Cài đặt hệ thống')}</span>
                     </button>
                   )}
@@ -290,6 +341,14 @@ export default function HeaderNav({ setCurrentPage, handleLogout, currentUser, h
         isOpen={isCommandModalOpen} 
         onClose={() => setIsCommandModalOpen(false)} 
         onSelectPage={(p) => setCurrentPage(p)} 
+      />
+      <AIModelCenterModal 
+        isOpen={isApiKeyModalOpen} 
+        onClose={() => {
+          setIsApiKeyModalOpen(false);
+          setHasGeminiKey(!!localStorage.getItem('examgen_gemini_api_key'));
+        }} 
+        defaultTab={apiKeyModalTab}
       />
     </>
   );
