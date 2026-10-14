@@ -90,21 +90,37 @@ async function callSingleProvider(
     const config: any = { ...generationConfig };
     if (systemInstruction) config.systemInstruction = systemInstruction;
 
-    if (modelConfig.id.includes('3.8-flash') || modelConfig.id.includes('3.7-flash') || modelConfig.id.includes('3.1-pro') || modelConfig.id.includes('2.5-pro')) {
+    if (modelConfig.id.includes('4-argon') || modelConfig.id.includes('3.8-flash') || modelConfig.id.includes('3.7-flash') || modelConfig.id.includes('3.1-pro') || modelConfig.id.includes('2.5-pro')) {
       if (reasoningEffort === 'low') config.thinkingConfig = { thinkingBudget: 1024 };
       else if (reasoningEffort === 'high') config.thinkingConfig = { thinkingBudget: 4096 };
     }
 
-    const response = await ai.models.generateContent({
-      model: modelConfig.id,
-      contents: [{ role: 'user', parts: [{ text: promptText }] }],
-      config
-    });
+    try {
+      const response = await ai.models.generateContent({
+        model: modelConfig.id,
+        contents: [{ role: 'user', parts: [{ text: promptText }] }],
+        config
+      });
 
-    return {
-      text: response.text || '',
-      usageMetadata: response.usageMetadata
-    };
+      return {
+        text: response.text || '',
+        usageMetadata: response.usageMetadata
+      };
+    } catch (apiErr: any) {
+      if (modelConfig.id === 'gemini-4-argon' && (apiErr?.message?.includes('not found') || apiErr?.message?.includes('404') || apiErr?.status === 404)) {
+        console.warn(`[Gemini 4 Argon] Model endpoint fallback to gemini-3.8-flash:`, apiErr?.message);
+        const fallbackResponse = await ai.models.generateContent({
+          model: 'gemini-3.8-flash',
+          contents: [{ role: 'user', parts: [{ text: promptText }] }],
+          config
+        });
+        return {
+          text: fallbackResponse.text || '',
+          usageMetadata: fallbackResponse.usageMetadata
+        };
+      }
+      throw apiErr;
+    }
   }
 
   // Format messages array for standard Chat Completions API

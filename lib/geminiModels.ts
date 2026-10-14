@@ -28,6 +28,6 @@ export async function syncGeminiModelRegistry(apiKey?: string): Promise<ModelSyn
     status: 'synced',
     latencyMs: latency,
     availableModelsCount: ALL_AI_MODELS.length,
-    message: `Đã đồng bộ thành công Trung tâm ${ALL_AI_MODELS.length} mô hình AI (Google Gemini 3.8 Flash, OpenAI, Copilot, Claude & DeepSeek). Độ trễ: ${latency}ms.`
+    message: `Đã đồng bộ thành công Trung tâm ${ALL_AI_MODELS.length} mô hình AI (Google Gemini 4 Argon, Gemini 3.8 Flash, OpenAI, Copilot, Claude & DeepSeek). Độ trễ: ${latency}ms.`
   };
 }

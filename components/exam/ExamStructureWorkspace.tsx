@@ -663,7 +663,9 @@ export default function ExamStructureWorkspace({ setExamData, setCurrentPage, up
                 
                 const metadata = `(${cognitiveAbbr}, ${topic?.topicName || 'N/A'})`;
                 
-                sectionHtml += `<p style="margin-bottom: 4px;"><strong>Câu ${questionCounter++}.</strong> ${q.content}</p>`;
+                // Remove anything inside parentheses if it appears to be metadata at start of content
+                const cleanContent = (q.content || '').replace(/^\s*\([^)]*\)\s*/, '');
+                sectionHtml += `<p style="margin-bottom: 4px;"><strong>Câu ${questionCounter++}.</strong> ${cleanContent}</p>`;
                 if (q.questionType === 'multipleChoice' && q.options) {
                     sectionHtml += '<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0 1.5em; margin-bottom: 1em;">';
                     q.options.forEach((opt: string, i: number) => {
@@ -697,21 +699,25 @@ export default function ExamStructureWorkspace({ setExamData, setCurrentPage, up
         }
 
         if (mcCount > 0) {
+            questionCounter = 1;
             html += `<p><strong>I. Trắc nghiệm nhiều lựa chọn (Tổng số câu: ${mcCount}, Điểm: ${mcPoints.toFixed(2)})</strong></p>`;
             html += renderQuestions(questionsByType.multipleChoice);
         }
         
         if (tfCount > 0) {
+            questionCounter = 1;
             html += `<p><strong>II. Trắc nghiệm Đúng/Sai (Tổng số câu: ${tfCount}, Điểm: ${tfPoints.toFixed(2)})</strong></p>`;
             html += renderQuestions(questionsByType.trueFalse);
         }
         
         if (saCount > 0) {
+            questionCounter = 1;
             html += `<p><strong>III. Trắc nghiệm trả lời ngắn (Tổng số câu: ${saCount}, Điểm: ${saPoints.toFixed(2)})</strong></p>`;
             html += renderQuestions(questionsByType.shortAnswer);
         }
 
         if (essayCount > 0) {
+            questionCounter = 1;
             html += `<h4><strong>B. TỰ LUẬN (Tổng số câu: ${essayCount}, Điểm: ${essayPoints.toFixed(2)})</strong></h4>`;
             html += renderQuestions(questionsByType.essay);
         }

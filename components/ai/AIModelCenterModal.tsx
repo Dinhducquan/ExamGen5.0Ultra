@@ -128,7 +128,7 @@ export const AIModelCenterModal: React.FC<AIModelCenterModalProps> = ({
   const handlePingProvider = async (provider: AIProvider) => {
     setTestingProvider(provider);
     try {
-      const sampleModel = ALL_AI_MODELS.find(m => m.provider === provider) || ALL_AI_MODELS[0];
+      const sampleModel = ALL_AI_MODELS.find(m => m.provider === provider && m.isDefault) || ALL_AI_MODELS.find(m => m.provider === provider) || ALL_AI_MODELS[0];
       const res = await safeGenerateContent({
         model: sampleModel.id,
         apiKey: apiKeys[provider],

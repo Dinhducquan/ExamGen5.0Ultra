@@ -15,7 +15,7 @@ export interface AdvancedSettings {
   // AI
   aiAssistant: boolean;
   automationLevel: 'manual' | 'suggested' | 'full';
-  aiModel: 'gemini-3.8-flash' | 'gemini-3.7-flash' | 'gemini-3.1-pro-preview' | 'gemini-3.1-flash-lite' | 'gemini-2.5-flash' | 'gemini-2.5-pro' | 'gemini-flash-latest' | string;
+  aiModel: 'gemini-4-argon' | 'gemini-3.8-flash' | 'gemini-3.7-flash' | 'gemini-3.1-pro-preview' | 'gemini-3.1-flash-lite' | 'gemini-2.5-flash' | 'gemini-2.5-pro' | 'gemini-flash-latest' | string;
   aiLanguage: 'vi' | 'en';
   aiReasoningEffort?: 'low' | 'medium' | 'high';
   aiAutoSyncModels?: boolean;
