@@ -112,10 +112,10 @@ export const Cv7991Spec: React.FC<Cv7991SpecProps> = ({ data, examSettings, gene
         <td style={tdStyle}>{index + 1}</td>
         {rowSpan > 0 && (
             <td style={{...tdStyle, textAlign: 'left', verticalAlign: 'middle'}} rowSpan={rowSpan}>
-                {topic.topicName}
+                {topic.unit}
             </td>
         )}
-        <td style={{...tdStyle, textAlign: 'left'}}>{topic.unit}</td>
+        <td style={{...tdStyle, textAlign: 'left'}}>{topic.topicName}</td>
         <td style={{...tdStyle, textAlign: 'left', whiteSpace: 'pre-wrap'}}>{topic.requirements}</td>
         {renderLevel(topic.multipleChoice)}
         {renderLevel(topic.trueFalse)}
