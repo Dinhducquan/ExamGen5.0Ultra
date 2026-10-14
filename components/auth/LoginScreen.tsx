@@ -9,6 +9,7 @@ import { useI18n } from '../../hooks/useI18n';
 import { useTheme } from '../../hooks/useTheme';
 import { authenticateWithCloud, createUserInCloud } from '../../lib/userService';
 import { SCHOOLS_BY_PROVINCE, PROFESSIONAL_GROUPS } from '../../constants';
+import { ForgotPasswordModal } from './ForgotPasswordModal';
 
 interface LoginScreenProps {
   onLoginSuccess: (user: User, rememberMe: boolean) => void;
@@ -27,6 +28,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, users }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [isForgotOpen, setIsForgotOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -173,6 +175,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, users }) => {
 
   return (
     <div className="relative flex items-center justify-center min-h-screen bg-[#FAF8F5] dark:bg-[#080B14] p-4 overflow-hidden transition-colors duration-200">
+      <ForgotPasswordModal isOpen={isForgotOpen} onClose={() => setIsForgotOpen(false)} users={users} />
       {/* Theme Toggle in Top Right */}
       <div className="absolute top-4 right-4 z-20">
         <button
@@ -292,6 +295,14 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, users }) => {
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
+
+              <button
+                type="button"
+                onClick={() => setIsForgotOpen(true)}
+                className="text-xs text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium cursor-pointer"
+              >
+                Quên mật khẩu?
+              </button>
 
               {error && (
                 <div className="text-xs font-medium text-red-700 dark:text-red-400 p-3 bg-red-50 dark:bg-red-950/40 rounded-xl border border-red-200 dark:border-red-800/60 leading-snug">

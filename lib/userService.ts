@@ -227,6 +227,14 @@ export async function updateUserInCloud(id: number, partialUser: Partial<User>):
 }
 
 /**
+ * Cập nhật mật khẩu người dùng lên Cloud Firestore
+ */
+export async function updatePasswordInCloud(id: number, newPassword: string): Promise<void> {
+  const docRef = doc(db, USERS_COLLECTION, String(id));
+  await updateDoc(docRef, { password: newPassword });
+}
+
+/**
  * Xóa một người dùng khỏi Cloud Firestore
  */
 export async function deleteUserInCloud(id: number): Promise<void> {
