@@ -54,6 +54,35 @@ const fileToBase64 = (file: File): Promise<string> => new Promise((resolve, reje
     reader.onerror = error => reject(error);
 });
 
+/**
+ * Loại bỏ hoàn toàn mức độ nhận thức (NB, TH, VD, VDC...) và địa chỉ kiến thức (Chương, Bài...)
+ * trong đề thi đã trộn để học sinh chỉ thấy số thứ tự câu hỏi và nội dung câu hỏi thuần túy.
+ */
+export const sanitizeStudentExamContent = (html: string): string => {
+    if (!html) return '';
+    let result = html;
+    
+    // 1. Trường hợp metadata nằm trong thẻ <strong>: <strong>Câu 1 (NB, Chương 1: Cân bằng hoá học).</strong>
+    result = result.replace(
+        /(<strong[^>]*>\s*Câu\s+\d+)\s*(?:\([^)]+\)|\[[^\]]+\])\s*([.:]?)(\s*<\/strong>)/gi,
+        '$1.$3'
+    );
+    
+    // 2. Trường hợp metadata nằm ngay sau thẻ <strong>: <strong>Câu 1.</strong> (NB, Chương 1...)
+    result = result.replace(
+        /(<strong[^>]*>\s*Câu\s+\d+\s*[\.:]?\s*<\/strong>)\s*(?:\([^)]+\)|\[[^\]]+\])\s*[:.]?\s*/gi,
+        '$1 '
+    );
+
+    // 3. Trường hợp văn bản thuần hoặc Markdown: Câu 1 (NB, Chương 1...).
+    result = result.replace(
+        /(Câu\s+\d+)\s*(?:\([^)]*(?:NB|TH|VD|VDC|Chương|Bài|Chủ đề|Nhận biết|Thông hiểu|Vận dụng)[^)]*\)|\[[^\]]*(?:NB|TH|VD|VDC|Chương|Bài|Chủ đề|Nhận biết|Thông hiểu|Vận dụng)[^\]]*\])\s*[:.]?/gi,
+        '$1.'
+    );
+
+    return result;
+};
+
 
 const ProgressBar: React.FC<{ progress: number }> = ({ progress }) => (
   <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2.5 my-2">
@@ -152,9 +181,17 @@ Dựa vào đề thi và đáp án gốc này, BẠN PHẢI tạo ra chính xác
 4.  **Xáo trộn phương án:** Trong mỗi câu hỏi trắc nghiệm, hãy xáo trộn thứ tự của các phương án trả lời (A, B, C, D).
 5.  **Tạo đáp án chính xác:** Tạo ra một bảng đáp án chính xác tương ứng cho MỖI đề đã được trộn.
 6.  **Gán mã đề:** Gán mã đề tuần tự, bắt đầu từ ${mixStartCode}.
-7.  **Định dạng câu hỏi:** Khi tạo nội dung câu hỏi cho đề trộn, BẮT BUỘC LOẠI BỎ hoàn toàn các thông tin về mức độ nhận thức, chương/bài hoặc metadata nằm trong ngoặc đơn ngay sau số thứ tự câu. 
-    - Ví dụ: Nếu đề gốc là "Câu 1 (NB, Chương 1...). Nội dung...", thì đề trộn phải chuyển thành "Câu [số mới]. Nội dung...".
-    - Giữ lại nội dung câu hỏi nguyên vẹn, chỉ xóa phần metadata trong ngoặc đơn ở đầu câu.
+7.  **Định dạng câu hỏi cho ĐỀ TRỘN CỦA HỌC SINH (TUYỆT ĐỐI KHÔNG ĐỂ LỘ MỨC ĐỘ NHẬN THỨC VÀ ĐỊA CHỈ KIẾN THỨC):** 
+    - Đề trộn này dùng trực tiếp để phát cho HỌC SINH làm bài thi, do đó BẮT BUỘC LOẠI BỎ TOÀN BỘ các thông tin về mức độ nhận thức (như NB, TH, VD, VDC, Nhận biết, Thông hiểu, Vận dụng, Vận dụng cao...), địa chỉ kiến thức (Chương, Bài, Chủ đề...) nằm trong ngoặc đơn hoặc ngoặc vuông ngay sau số thứ tự câu.
+    - Ví dụ: Nếu đề gốc là "Câu 1 (NB, Chương 1: Cân bằng hoá học). Nội dung...", hoặc "Câu 1 [NB - Chương 1: Cân bằng hoá học]. Nội dung...", thì trong đề trộn của học sinh BẮT BUỘC phải chuyển thành: "Câu 1. Nội dung..." (chỉ có số thứ tự câu và nội dung, KHÔNG có phần trong ngoặc).
+    - Giữ lại nội dung câu hỏi nguyên vẹn, các phương án A, B, C, D nguyên vẹn. Tuyệt đối không để sót bất kỳ ký hiệu mức độ nhận thức hay chương/bài nào trong đề thi học sinh.
+8.  **Đánh số thứ tự câu hỏi tăng dần theo từng loại câu hỏi:** 
+    - Đánh số thứ tự câu hỏi tăng dần bắt đầu lại từ 'Câu 1.' cho TỪNG LOẠI câu hỏi / từng phần:
+      + Phần I. Trắc nghiệm nhiều lựa chọn: Câu 1, Câu 2...
+      + Phần II. Trắc nghiệm Đúng/Sai: Câu 1, Câu 2...
+      + Phần III. Trắc nghiệm trả lời ngắn: Câu 1, Câu 2...
+      + Phần B. Tự luận: Câu 1, Câu 2...
+    - Bảng đáp án tương ứng cũng đánh số bắt đầu từ Câu 1 cho từng loại câu hỏi / từng phần tương ứng.
 
 Hãy trả về kết quả dưới dạng một MẢNG JSON. Mảng này PHẢI chứa ĐÚNG ${mixVersions} đối tượng JSON, không hơn không kém. Mỗi đối tượng phải chứa 'code', 'examContent' (HTML), và 'answerContent' (HTML). Đảm bảo JSON trả về là hợp lệ và các chuỗi HTML được escape đúng cách.`;
 
@@ -190,7 +227,13 @@ Hãy trả về kết quả dưới dạng một MẢNG JSON. Mảng này PHẢI
             addToast(t('mixExam.toast.success', 'Đã trộn thành công {count} phiên bản đề!', { count: mixedExams.length }));
         }
 
-        setMixedExamData(mixedExams);
+        // Làm sạch hoàn toàn metadata mức độ nhận thức / địa chỉ kiến thức cho học sinh
+        const sanitizedMixedExams = mixedExams.map(item => ({
+            ...item,
+            examContent: sanitizeStudentExamContent(item.examContent)
+        }));
+
+        setMixedExamData(sanitizedMixedExams);
         setCurrentPage('results');
 
     } catch (error) {

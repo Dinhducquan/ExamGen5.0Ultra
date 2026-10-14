@@ -20,6 +20,7 @@ import { uploadHtmlDocumentToDrive } from '../../lib/googleDriveService';
 import { exportToDocx } from '../../utils/docxExporter';
 import { exportMatrixToExcel } from '../../utils/excelExporter';
 import { generateAutoFilename } from '../../utils/filenameUtils';
+import { sanitizeStudentExamContent } from '../mix/MixExamWorkspace';
 
 
 const DocumentPreview: React.FC<{
@@ -362,7 +363,7 @@ export default function ResultsWorkspace({ examData, setExamData, outlineData, m
         </TabsContent>
         <TabsContent value="mixed-exam">
             {selectedMixedExam ? (
-                <DocumentPreview docType={`ĐềTrộn_Mã${selectedMixedExam.code}`} examType={settings.examType.toUpperCase() || "ĐỀ KIỂM TRA"} showCode={selectedMixedExam.code} content={selectedMixedExam.examContent} questionCount={totalQuestionsFromExamData} />
+                <DocumentPreview docType={`ĐềTrộn_Mã${selectedMixedExam.code}`} examType={settings.examType.toUpperCase() || "ĐỀ KIỂM TRA"} showCode={selectedMixedExam.code} content={typeof selectedMixedExam.examContent === 'string' ? sanitizeStudentExamContent(selectedMixedExam.examContent) : selectedMixedExam.examContent} questionCount={totalQuestionsFromExamData} />
             ) : (
                 <DocumentPreview docType="ĐềTrộn" examType="ĐỀ KIỂM TRA" content={<PlaceholderContent title={t('results.placeholderMixedTitle')} subtitle={t('results.placeholderMixedSubtitle')} />} />
             )}

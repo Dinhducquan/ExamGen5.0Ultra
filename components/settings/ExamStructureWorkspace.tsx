@@ -709,18 +709,37 @@ export default function ExamStructureWorkspace({ setExamData, setCurrentPage, up
             qs.forEach((q) => {
                 const topic = topicMap.get(q.topicId);
                 const cognitiveLevel = (q.cognitiveLevel || '').toLowerCase();
-                const cognitiveAbbr = cognitiveLevel === 'biet' ? 'NB' 
-                    : cognitiveLevel === 'hieu' ? 'TH' 
-                    : cognitiveLevel === 'vd' ? 'VD' 
-                    : cognitiveLevel === 'vdc' ? 'VDC' 
-                    : cognitiveLevel.toUpperCase();
-                
-                // Construct specific metadata string
-                const unitInfo = topic?.unit ? `, ${topic.unit}` : '';
-                const topicInfo = topic?.topicName ? `, ${topic.topicName}` : '';
-                const metadata = `(${cognitiveAbbr}${topicInfo}${unitInfo})`;
-                
-                sectionHtml += `<p style="margin-bottom: 4px;"><strong>Câu ${questionCounter++} <span style="font-style: italic; font-weight: normal;">${metadata}</span>.</strong> ${q.content}</p>`;
+                const cognitiveAbbr = (cognitiveLevel === 'biet' || cognitiveLevel === 'nb' || cognitiveLevel.includes('nhận biết') || cognitiveLevel.includes('biet')) ? 'NB' 
+                    : (cognitiveLevel === 'hieu' || cognitiveLevel === 'th' || cognitiveLevel.includes('thông hiểu') || cognitiveLevel.includes('hieu')) ? 'TH' 
+                    : (cognitiveLevel === 'vd' || (cognitiveLevel.includes('vận dụng') && !cognitiveLevel.includes('cao')) || (cognitiveLevel.includes('vd') && !cognitiveLevel.includes('vdc'))) ? 'VD' 
+                    : (cognitiveLevel === 'vdc' || cognitiveLevel.includes('cao')) ? 'VDC' 
+                    : (q.cognitiveLevel ? q.cognitiveLevel.toUpperCase() : '');
+
+                // Extract existing metadata if present
+                let existingMeta = '';
+                const matchMeta = (q.content || '').match(/^\s*(\([^)]+\)|\[[^\]]+\])\s*[:.]?\s*/);
+                if (matchMeta) {
+                    existingMeta = matchMeta[1].replace(/^[(\[]|[)\]]$/g, '').trim();
+                }
+                const cleanContent = (q.content || '').replace(/^\s*(\([^)]+\)|\[[^\]]+\])\s*[:.]?\s*/, '').trim();
+
+                // Format metadata: Mức độ nhận thức, địa chỉ kiến thức (NB, Chương 1...) cho giáo viên
+                let metaText = '';
+                if (topic) {
+                    const addressParts: string[] = [];
+                    if (topic.topicName) addressParts.push(topic.topicName);
+                    if (topic.unit && topic.unit !== topic.topicName) addressParts.push(topic.unit);
+                    const addressStr = addressParts.join(' - ');
+                    metaText = cognitiveAbbr ? (addressStr ? `${cognitiveAbbr}, ${addressStr}` : cognitiveAbbr) : addressStr;
+                } else if (existingMeta) {
+                    metaText = existingMeta;
+                } else if (cognitiveAbbr) {
+                    metaText = cognitiveAbbr;
+                }
+
+                const metadataLabel = metaText ? `(${metaText})` : '';
+
+                sectionHtml += `<p style="margin-bottom: 4px;"><strong>Câu ${questionCounter++}${metadataLabel ? ` ${metadataLabel}` : ''}.</strong> ${cleanContent}</p>`;
                 if (q.questionType === 'multipleChoice' && q.options) {
                     sectionHtml += '<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0 1.5em; margin-bottom: 1em;">';
                     q.options.forEach((opt: string, i: number) => {
@@ -762,21 +781,25 @@ export default function ExamStructureWorkspace({ setExamData, setCurrentPage, up
         }
 
         if (mcCount > 0) {
+            questionCounter = 1;
             html += `<p><strong>I. Trắc nghiệm nhiều lựa chọn (Tổng số câu: ${mcCount}, Điểm: ${mcPoints.toFixed(2)})</strong></p>`;
             html += renderQuestions(questionsByType.multipleChoice);
         }
         
         if (tfCount > 0) {
+            questionCounter = 1;
             html += `<p><strong>II. Trắc nghiệm Đúng/Sai (Tổng số câu: ${tfCount}, Điểm: ${tfPoints.toFixed(2)})</strong></p>`;
             html += renderQuestions(questionsByType.trueFalse);
         }
         
         if (saCount > 0) {
+            questionCounter = 1;
             html += `<p><strong>III. Trắc nghiệm trả lời ngắn (Tổng số câu: ${saCount}, Điểm: ${saPoints.toFixed(2)})</strong></p>`;
             html += renderQuestions(questionsByType.shortAnswer);
         }
 
         if (essayCount > 0) {
+            questionCounter = 1;
             html += `<h4><strong>B. TỰ LUẬN (Tổng số câu: ${essayCount}, Điểm: ${essayPoints.toFixed(2)})</strong></h4>`;
             html += renderQuestions(questionsByType.essay);
         }
@@ -801,7 +824,6 @@ export default function ExamStructureWorkspace({ setExamData, setCurrentPage, up
         };
 
         let html = '<h4><strong>ĐÁP ÁN VÀ HƯỚNG DẪN CHẤM</strong></h4>';
-        let currentQuestionIndex = 1;
 
         const mcCount = questionsByType.multipleChoice.length;
         const tfCount = questionsByType.trueFalse.length;
@@ -816,12 +838,12 @@ export default function ExamStructureWorkspace({ setExamData, setCurrentPage, up
         const totalMcqCount = mcCount + tfCount + saCount;
         const totalMcqPoints = mcPoints + tfPoints + saPoints;
         
-        const renderAnswerTable = (qs: any[], startIndex: number) => {
+        const renderAnswerTable = (qs: any[], startIndex: number = 1) => {
             if (qs.length === 0) return '';
             let s = '<table border="1" style="border-collapse: collapse; width: 100%; text-align: center; margin-top: 5px; margin-bottom: 10px;"><tbody><tr>';
             qs.forEach((q, i) => {
                 if (i > 0 && i % 10 === 0) s += '</tr><tr>';
-                s += `<td style="padding: 4px;"><strong>${startIndex + i}.</strong> ${q.answer}</td>`;
+                s += `<td style="padding: 4px;"><strong>Câu ${startIndex + i}.</strong> ${q.answer}</td>`;
             });
             s += '</tr></tbody></table>';
             return s;
@@ -832,25 +854,23 @@ export default function ExamStructureWorkspace({ setExamData, setCurrentPage, up
             
             if (mcCount > 0) {
                 html += `<p style="margin-bottom: 0;"><strong>I. Trắc nghiệm nhiều lựa chọn (Tổng số câu: ${mcCount}, Điểm: ${mcPoints.toFixed(2)})</strong></p>`;
-                html += renderAnswerTable(questionsByType.multipleChoice, currentQuestionIndex);
-                currentQuestionIndex += mcCount;
+                html += renderAnswerTable(questionsByType.multipleChoice, 1);
             }
             if (tfCount > 0) {
                 html += `<p style="margin-bottom: 0;"><strong>II. Trắc nghiệm Đúng/Sai (Tổng số câu: ${tfCount}, Điểm: ${tfPoints.toFixed(2)})</strong></p>`;
-                html += renderAnswerTable(questionsByType.trueFalse, currentQuestionIndex);
-                currentQuestionIndex += tfCount;
+                html += renderAnswerTable(questionsByType.trueFalse, 1);
             }
             if (saCount > 0) {
                 html += `<p style="margin-bottom: 0;"><strong>III. Trắc nghiệm trả lời ngắn (Tổng số câu: ${saCount}, Điểm: ${saPoints.toFixed(2)})</strong></p>`;
-                html += renderAnswerTable(questionsByType.shortAnswer, currentQuestionIndex);
-                currentQuestionIndex += saCount;
+                html += renderAnswerTable(questionsByType.shortAnswer, 1);
             }
         }
 
         if (essayCount > 0) {
+            let essayCounter = 1;
             html += `<h4><strong>B. TỰ LUẬN (Tổng số câu: ${essayCount}, Điểm: ${essayPoints.toFixed(2)})</strong></h4>`;
             questionsByType.essay.forEach(q => {
-                html += `<p><strong>Câu ${currentQuestionIndex++}:</strong></p>`;
+                html += `<p><strong>Câu ${essayCounter++}:</strong></p>`;
                 html += q.detailedAnswer || '<em>Không có hướng dẫn chấm chi tiết.</em>';
                 html += '<br/>';
             });
@@ -939,6 +959,7 @@ export default function ExamStructureWorkspace({ setExamData, setCurrentPage, up
                     - Phần I (Đọc hiểu): ${examSettings.auto.nguVanTuDongDocHieuPart.soCau} câu, tổng điểm ${examSettings.auto.nguVanTuDongDocHieuPart.tongDiem}. AI phải tự tìm một ngữ liệu đọc hiểu phù hợp (văn bản nghị luận hoặc thông tin) và **tuyệt đối không được lấy từ Sách giáo khoa**. Ưu tiên các văn bản mới lạ, ít xuất hiện trong các đề thi cũ để tránh học tủ.
                     - Phần II (Viết): ${examSettings.auto.nguVanTuDongVietPart.soCau} câu, tổng điểm ${examSettings.auto.nguVanTuDongVietPart.tongDiem}. 
                     - **YÊU CẦU QUAN TRỌNG:** Hạn chế tối đa việc ra lại các câu hỏi hoặc ngữ liệu đã quá quen thuộc. Hãy ưu tiên chọn ngữ liệu mới mẻ, mang tính thời sự hoặc ít được khai thác để đánh giá đúng năng lực học sinh.
+                    - **Quy tắc đánh số câu hỏi:** Đánh số câu hỏi tăng dần bắt đầu lại từ 'Câu 1.' cho từng phần (Phần I. Đọc hiểu: Câu 1, Câu 2...; Phần II. Viết: Câu 1, Câu 2...). Phần đáp án tương ứng cũng đánh số bắt đầu từ Câu 1 cho từng phần.
                     - Trả về kết quả dưới dạng JSON object có 2 key: "examContent" (HTML đề thi) và "answerContent" (HTML đáp án và hướng dẫn chấm). Đảm bảo JSON trả về là hợp lệ và các chuỗi HTML được escape đúng cách.
                     
 ${studentTargetDirective}`;
@@ -947,6 +968,7 @@ ${studentTargetDirective}`;
                     prompt = `Với vai trò là một giáo viên Ngữ văn kinh nghiệm, hãy tạo nội dung chi tiết cho một đề thi dựa trên cấu trúc chính xác sau đây. TUYỆT ĐỐI không thay đổi cấu trúc, chỉ tạo nội dung.
                     - Mã phiên tạo (Random Seed): ${randomSeed}. Hãy sáng tạo nội dung chi tiết khác biệt dựa trên mã này.
                     - Cấu trúc: \`\`\`json\n${JSON.stringify({docHieu: examSettings.manual.nguVanDocHieuPart, viet: examSettings.manual.nguVanVietPart}, null, 2)}\n\`\`\`
+                    - **Quy tắc đánh số câu hỏi:** Đánh số câu hỏi tăng dần bắt đầu lại từ 'Câu 1.' cho từng phần (Phần I. Đọc hiểu: Câu 1, Câu 2...; Phần II. Viết: Câu 1, Câu 2...). Phần đáp án tương ứng cũng đánh số bắt đầu từ Câu 1 cho từng phần.
                     - Trả về kết quả dưới dạng JSON object có 2 key: "examContent" (HTML đề thi) và "answerContent" (HTML đáp án và hướng dẫn chấm chi tiết, có biểu điểm rõ ràng cho từng ý, ngắn gọn, súc tích nhưng đầy đủ ý). Đảm bảo JSON trả về là hợp lệ và các chuỗi HTML được escape đúng cách.
                     
 ${studentTargetDirective}`;
