@@ -28,12 +28,57 @@ export function cleanHtmlForDocx(rawHtml: string): string {
   <meta charset="utf-8">
   <title>Exam Document</title>
   <style>
-    body { font-family: 'Times New Roman', serif; font-size: 13pt; line-height: 1.5; color: #000000; }
-    h1, h2, h3, h4 { font-weight: bold; font-family: 'Times New Roman', serif; margin-top: 12pt; margin-bottom: 6pt; text-align: center; }
-    table { border-collapse: collapse; width: 100%; margin-top: 10pt; margin-bottom: 10pt; }
-    th, td { border: 1px solid #000000; padding: 6pt; font-size: 11pt; text-align: left; vertical-align: top; }
-    th { font-weight: bold; background-color: #f2f2f2; text-align: center; }
-    p { margin-bottom: 6pt; margin-top: 0; }
+    * { font-family: 'Times New Roman', Times, serif !important; }
+    body { 
+      font-family: 'Times New Roman', Times, serif !important; 
+      font-size: 13pt !important; 
+      line-height: 1.15 !important; 
+      color: #000000; 
+      margin: 0; 
+      padding: 0; 
+    }
+    p, div, span, li, a { 
+      font-family: 'Times New Roman', Times, serif !important; 
+      font-size: 13pt !important; 
+      line-height: 1.15 !important; 
+      margin-top: 0pt !important; 
+      margin-bottom: 2pt !important; 
+    }
+    h1, h2, h3, h4, h5, h6 { 
+      font-weight: bold; 
+      font-family: 'Times New Roman', Times, serif !important; 
+      font-size: 13pt !important; 
+      line-height: 1.15 !important; 
+      margin-top: 0pt !important; 
+      margin-bottom: 2pt !important; 
+      text-align: center; 
+    }
+    table { 
+      border-collapse: collapse; 
+      width: 100%; 
+      margin-top: 0pt !important; 
+      margin-bottom: 2pt !important; 
+      font-family: 'Times New Roman', Times, serif !important; 
+      font-size: 13pt !important; 
+    }
+    th, td { 
+      border: 1px solid #000000; 
+      padding: 4pt 6pt; 
+      font-size: 13pt !important; 
+      font-family: 'Times New Roman', Times, serif !important; 
+      line-height: 1.15 !important; 
+      margin-top: 0pt !important; 
+      margin-bottom: 0pt !important; 
+      text-align: left; 
+      vertical-align: top; 
+    }
+    th { 
+      font-weight: bold; 
+      background-color: #f2f2f2; 
+      text-align: center; 
+      font-size: 13pt !important; 
+    }
+    p { margin-top: 0pt !important; margin-bottom: 2pt !important; font-size: 13pt !important; font-family: 'Times New Roman', Times, serif !important; line-height: 1.15 !important; }
     strong, b { font-weight: bold; }
     em, i { font-style: italic; }
     .page-break { page-break-before: always; mso-break-type: section-break; }
@@ -98,12 +143,13 @@ export async function exportToDocx(
  */
 export function exportToDoc(htmlContent: string, filename: string | FilenameMetadata): void {
   const styles = `
-    body { font-family: 'Times New Roman', Times, serif; font-size: 13pt; line-height: 1.5; }
-    table { border-collapse: collapse; width: 100%; margin-bottom: 1em; }
-    th, td { border: 1px solid black; padding: 5px; text-align: left; vertical-align: top; }
-    th { font-weight: bold; text-align: center; background-color: #f2f2f2; }
-    p, li, div { margin: 0; padding: 0; line-height: 1.5; }
-    h1, h2, h3, h4, h5, h6 { margin: 12pt 0 3pt 0; font-weight: bold; page-break-after: avoid; }
+    * { font-family: 'Times New Roman', Times, serif !important; }
+    body, p, div, span, td, th, li, a { font-family: 'Times New Roman', Times, serif !important; font-size: 13pt !important; line-height: 1.15 !important; margin-top: 0pt !important; margin-bottom: 2pt !important; }
+    table { border-collapse: collapse; width: 100%; margin-top: 0pt !important; margin-bottom: 2pt !important; font-family: 'Times New Roman', Times, serif !important; font-size: 13pt !important; }
+    th, td { border: 1px solid black; padding: 4pt 5pt; text-align: left; vertical-align: top; font-size: 13pt !important; font-family: 'Times New Roman', Times, serif !important; line-height: 1.15 !important; margin-top: 0pt !important; margin-bottom: 0pt !important; }
+    th { font-weight: bold; text-align: center; background-color: #f2f2f2; font-size: 13pt !important; }
+    p, li, div { margin-top: 0pt !important; margin-bottom: 2pt !important; line-height: 1.15 !important; font-size: 13pt !important; font-family: 'Times New Roman', Times, serif !important; }
+    h1, h2, h3, h4, h5, h6 { margin-top: 0pt !important; margin-bottom: 2pt !important; font-weight: bold; page-break-after: avoid; font-size: 13pt !important; font-family: 'Times New Roman', Times, serif !important; line-height: 1.15 !important; }
     strong, b { font-weight: bold; }
     em, i { font-style: italic; }
   `;

@@ -60,11 +60,11 @@ function wrapStandardLayout(params: {
   );
 
   const codeHtml = params.showCode
-    ? `<div style="text-align: center; font-weight: bold; font-size: 14pt; margin: 14pt auto; padding: 4pt 12pt; border: 1.5pt solid black; width: 220px;">MÃ ĐỀ THI: ${params.showCode}</div>`
+    ? `<div style="text-align: center; font-weight: bold; font-size: 13pt; margin-top: 0pt; margin-bottom: 2pt; padding: 4pt 12pt; border: 1.5pt solid black; width: 220px; font-family: 'Times New Roman', Times, serif; line-height: 1.15;">MÃ ĐỀ THI: ${params.showCode}</div>`
     : '';
 
   const titleHtml = params.docTitle
-    ? `<h2 style="text-align: center; font-size: 14pt; font-weight: bold; text-transform: uppercase; margin-top: 14pt; margin-bottom: 12pt;">${params.docTitle}</h2>`
+    ? `<h2 style="text-align: center; font-size: 13pt; font-weight: bold; text-transform: uppercase; margin-top: 0pt; margin-bottom: 2pt; font-family: 'Times New Roman', Times, serif; line-height: 1.15;">${params.docTitle}</h2>`
     : '';
 
   const footerHtml = renderToStaticMarkup(
@@ -77,14 +77,14 @@ function wrapStandardLayout(params: {
   );
 
   return `
-    <div style="font-family: 'Times New Roman', serif; font-size: 13pt; line-height: 1.5;">
+    <div style="font-family: 'Times New Roman', Times, serif; font-size: 13pt; line-height: 1.15; color: #000000; margin-top: 0pt; margin-bottom: 2pt;">
       ${headerHtml}
       ${codeHtml}
       ${titleHtml}
-      <div style="margin-top: 14pt;">
+      <div style="margin-top: 0pt; margin-bottom: 2pt; font-family: 'Times New Roman', Times, serif; font-size: 13pt; line-height: 1.15;">
         ${params.bodyContentHtml}
       </div>
-      <div style="margin-top: 32pt; page-break-inside: avoid;">
+      <div style="margin-top: 12pt; margin-bottom: 2pt; page-break-inside: avoid; font-family: 'Times New Roman', Times, serif; font-size: 13pt; line-height: 1.15;">
         ${footerHtml}
       </div>
     </div>

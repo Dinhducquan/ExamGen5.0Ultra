@@ -24,15 +24,15 @@ export const ExamHeader: React.FC<ExamHeaderProps> = ({
   examType = "ĐỀ KIỂM TRA"
 }) => {
   return (
-    <table style={{ width: '100%', border: 'none', borderCollapse: 'collapse' }}>
+    <table style={{ width: '100%', border: 'none', borderCollapse: 'collapse', fontFamily: '"Times New Roman", Times, serif', fontSize: '13pt' }}>
       <tbody>
         <tr>
-          <td style={{ width: '50%', textAlign: 'center', verticalAlign: 'top', padding: '0 8px', border: 'none' }}>
+          <td style={{ width: '50%', textAlign: 'center', verticalAlign: 'top', padding: '0 8px', border: 'none', fontFamily: '"Times New Roman", Times, serif', fontSize: '13pt' }}>
             <div style={{ textTransform: 'uppercase' }}><strong>SỞ GD & ĐT {province}</strong></div>
             <div style={{ textTransform: 'uppercase' }}><strong>TRƯỜNG {school}</strong></div>
             <div style={{ textTransform: 'uppercase' }}><strong>TỔ {group}</strong></div>
           </td>
-          <td style={{ width: '50%', textAlign: 'center', verticalAlign: 'top', padding: '0 8px', border: 'none' }}>
+          <td style={{ width: '50%', textAlign: 'center', verticalAlign: 'top', padding: '0 8px', border: 'none', fontFamily: '"Times New Roman", Times, serif', fontSize: '13pt' }}>
             <div style={{ textTransform: 'uppercase' }}><strong>{examType}</strong></div>
             <div style={{ textTransform: 'uppercase' }}><strong>NĂM HỌC {year}</strong></div>
             <div style={{ textTransform: 'uppercase' }}><strong>MÔN: {subject} - KHỐI {grade}</strong></div>

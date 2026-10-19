@@ -13,8 +13,8 @@ const tableStyle: React.CSSProperties = {
   border: '1px solid black',
   borderCollapse: 'collapse',
   textAlign: 'center',
-  fontSize: '11pt',
-  fontFamily: '"Times New Roman", serif',
+  fontSize: '13pt',
+  fontFamily: '"Times New Roman", Times, serif',
   marginTop: '16px',
 };
 
@@ -23,11 +23,15 @@ const thStyle: React.CSSProperties = {
   padding: '6px',
   fontWeight: 'bold',
   backgroundColor: '#f2f2f2',
+  fontSize: '13pt',
+  fontFamily: '"Times New Roman", Times, serif',
 };
 
 const tdStyle: React.CSSProperties = {
   border: '1px solid black',
   padding: '6px',
+  fontSize: '13pt',
+  fontFamily: '"Times New Roman", Times, serif',
 };
 
 const leftTdStyle: React.CSSProperties = {
@@ -40,6 +44,7 @@ const h4Style: React.CSSProperties = {
     marginTop: '16px',
     marginBottom: '8px',
     fontSize: '13pt',
+    fontFamily: '"Times New Roman", Times, serif',
 };
 
 const ExamStructureReport: React.FC<ExamStructureReportProps> = ({ examSettings, generalSettings }) => {
@@ -63,9 +68,9 @@ const ExamStructureReport: React.FC<ExamStructureReportProps> = ({ examSettings,
         <>
             <h4 style={h4Style}>BẢNG CHI TIẾT CÁC CHỦ ĐỀ</h4>
             {manual.manualTopics.map((topic, index) => (
-                <div key={topic.id} style={{ marginBottom: '24px', pageBreakInside: 'avoid' }}>
-                    <h5 style={{ fontWeight: 'bold', fontSize: '12pt' }}>{index + 1}. Chủ đề: {topic.topicName}</h5>
-                    <p style={{ fontSize: '11pt', fontStyle: 'italic' }}><strong>Yêu cầu cần đạt:</strong> {topic.requirements}</p>
+                <div key={topic.id} style={{ marginBottom: '24px', pageBreakInside: 'avoid', fontFamily: '"Times New Roman", Times, serif', fontSize: '13pt' }}>
+                    <h5 style={{ fontWeight: 'bold', fontSize: '13pt', fontFamily: '"Times New Roman", Times, serif' }}>{index + 1}. Chủ đề: {topic.topicName}</h5>
+                    <p style={{ fontSize: '13pt', fontStyle: 'italic', fontFamily: '"Times New Roman", Times, serif' }}><strong>Yêu cầu cần đạt:</strong> {topic.requirements}</p>
                     <table style={tableStyle}>
                         <thead>
                             <tr>
@@ -104,14 +109,14 @@ const ExamStructureReport: React.FC<ExamStructureReportProps> = ({ examSettings,
     const renderNguVanManualStructure = () => (
         <>
             <h4 style={h4Style}>PHẦN I: ĐỌC HIỂU</h4>
-            <p style={{ fontSize: '11pt' }}><strong>Ngữ liệu:</strong> {manual.nguVanDocHieuPart.passage ? 'Đã cung cấp' : 'Chưa cung cấp'}</p>
+            <p style={{ fontSize: '13pt', fontFamily: '"Times New Roman", Times, serif' }}><strong>Ngữ liệu:</strong> {manual.nguVanDocHieuPart.passage ? 'Đã cung cấp' : 'Chưa cung cấp'}</p>
             <table style={tableStyle}>
                 <thead><tr><th style={thStyle}>Câu</th><th style={thStyle}>Mức độ</th><th style={thStyle}>Điểm</th><th style={thStyle}>Yêu cầu cần đạt</th></tr></thead>
                 <tbody>{manual.nguVanDocHieuPart.questions.map((q, i) => (<tr key={q.id}><td style={tdStyle}>{i+1}</td><td style={tdStyle}>{q.cognitiveLevel}</td><td style={tdStyle}>{q.points}</td><td style={leftTdStyle}>{q.requirements}</td></tr>))}</tbody>
             </table>
 
             <h4 style={h4Style}>PHẦN II: VIẾT</h4>
-            <p style={{ fontSize: '11pt' }}><strong>Mô tả yêu cầu chung:</strong> {manual.nguVanVietPart.promptDescription}</p>
+            <p style={{ fontSize: '13pt', fontFamily: '"Times New Roman", Times, serif' }}><strong>Mô tả yêu cầu chung:</strong> {manual.nguVanVietPart.promptDescription}</p>
             <table style={tableStyle}>
                  <thead><tr><th style={thStyle}>Câu</th><th style={thStyle}>Yêu cầu</th><th style={thStyle}>Điểm NB</th><th style={thStyle}>Điểm TH</th><th style={thStyle}>Điểm VD</th><th style={thStyle}>Điểm VDC</th></tr></thead>
                 <tbody>{manual.nguVanVietPart.questions.map((q, i) => (<tr key={q.id}><td style={tdStyle}>{i+1}</td><td style={leftTdStyle}>{q.prompt}</td><td style={tdStyle}>{q.pointsBiet}</td><td style={tdStyle}>{q.pointsHieu}</td><td style={tdStyle}>{q.pointsVd}</td><td style={tdStyle}>{q.pointsVdCao}</td></tr>))}</tbody>

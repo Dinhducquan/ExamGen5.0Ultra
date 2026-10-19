@@ -89,7 +89,7 @@ const StructureReport: React.FC<StructureReportProps> = ({ report, topics, setti
     const dateString = `ngày ${String(today.getDate()).padStart(2, '0')} tháng ${String(today.getMonth() + 1).padStart(2, '0')} năm ${today.getFullYear()}`;
 
     return (
-        <div className="p-8 text-slate-900 dark:text-slate-100" style={{ fontFamily: '"Times New Roman", Times, serif' }}>
+        <div className="p-8 text-slate-900 dark:text-slate-100" style={{ fontFamily: '"Times New Roman", Times, serif', fontSize: '13pt' }}>
              <ExamHeader 
                 province={settings.province.toUpperCase()}
                 school={settings.school.toUpperCase()}

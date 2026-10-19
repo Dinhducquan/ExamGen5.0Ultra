@@ -111,10 +111,11 @@ export function exportTableToExcelHtml(htmlContent: string, options: ExcelExport
   </xml>
   <![endif]-->
   <style>
-    body { font-family: 'Times New Roman', Arial, sans-serif; font-size: 11pt; }
-    table { border-collapse: collapse; width: 100%; margin-bottom: 15px; font-family: 'Times New Roman', Arial, sans-serif; }
-    th, td { border: 0.5pt solid #000000; padding: 6px 8px; font-size: 11pt; text-align: center; vertical-align: middle; }
-    th { font-weight: bold; background-color: #EFEFEF; text-align: center; }
+    * { font-family: 'Times New Roman', Times, serif !important; }
+    body { font-family: 'Times New Roman', Times, serif !important; font-size: 13pt !important; }
+    table { border-collapse: collapse; width: 100%; margin-bottom: 15px; font-family: 'Times New Roman', Times, serif !important; font-size: 13pt !important; }
+    th, td { border: 0.5pt solid #000000; padding: 6px 8px; font-size: 13pt !important; font-family: 'Times New Roman', Times, serif !important; text-align: center; vertical-align: middle; }
+    th { font-weight: bold; background-color: #EFEFEF; text-align: center; font-size: 13pt !important; }
     .text-left { text-align: left !important; }
     .text-center { text-align: center !important; }
     .text-right { text-align: right !important; }

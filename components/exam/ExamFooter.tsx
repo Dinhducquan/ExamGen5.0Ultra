@@ -17,28 +17,28 @@ export const ExamFooter: React.FC<ExamFooterProps> = ({
   const dateString = `ngày ${String(today.getDate()).padStart(2, '0')} tháng ${String(today.getMonth() + 1).padStart(2, '0')} năm ${today.getFullYear()}`;
 
   return (
-    <div>
-      <div style={{ width: '100%', fontStyle: 'italic', paddingBottom: '8px', textAlign: 'right' }}>
+    <div style={{ fontFamily: '"Times New Roman", Times, serif', fontSize: '13pt' }}>
+      <div style={{ width: '100%', fontStyle: 'italic', paddingBottom: '8px', textAlign: 'right', fontFamily: '"Times New Roman", Times, serif', fontSize: '13pt' }}>
         {place}, {dateString}
       </div>
-      <table style={{ width: '100%', borderCollapse: 'collapse', border: 'none' }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', border: 'none', fontFamily: '"Times New Roman", Times, serif', fontSize: '13pt' }}>
         <tbody>
           <tr>
-            <td style={{ width: '33.33%', verticalAlign: 'top', padding: '4px', textAlign: 'center', border: 'none' }}>
+            <td style={{ width: '33.33%', verticalAlign: 'top', padding: '4px', textAlign: 'center', border: 'none', fontFamily: '"Times New Roman", Times, serif', fontSize: '13pt' }}>
               <strong>KÝ THAY HIỆU TRƯỞNG</strong>
               <div><strong>PHÓ HIỆU TRƯỞNG</strong></div>
               <div style={{ fontStyle: 'italic' }}>(Ký, ghi rõ họ tên)</div>
               <div style={{ height: '60px' }}></div>
               <strong>{vicePrincipalName}</strong>
             </td>
-            <td style={{ width: '33.33%', verticalAlign: 'top', padding: '4px', textAlign: 'center', border: 'none' }}>
+            <td style={{ width: '33.33%', verticalAlign: 'top', padding: '4px', textAlign: 'center', border: 'none', fontFamily: '"Times New Roman", Times, serif', fontSize: '13pt' }}>
               <strong>DUYỆT CỦA TỔ CHUYÊN MÔN</strong>
               <div><strong>TỔ TRƯỞNG</strong></div>
               <div style={{ fontStyle: 'italic' }}>(Ký, ghi rõ họ tên)</div>
               <div style={{ height: '60px' }}></div>
               <strong>{groupLeaderName}</strong>
             </td>
-            <td style={{ width: '33.33%', verticalAlign: 'top', padding: '4px', textAlign: 'center', border: 'none' }}>
+            <td style={{ width: '33.33%', verticalAlign: 'top', padding: '4px', textAlign: 'center', border: 'none', fontFamily: '"Times New Roman", Times, serif', fontSize: '13pt' }}>
               <strong>NGƯỜI RA ĐỀ</strong>
               <div style={{ height: '21px' }}>&nbsp;</div> {/* Spacer to align with other columns */}
               <div style={{ fontStyle: 'italic' }}>(Ký, ghi rõ họ tên)</div>

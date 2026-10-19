@@ -739,19 +739,19 @@ export default function ExamStructureWorkspace({ setExamData, setCurrentPage, up
 
                 const metadataLabel = metaText ? `(${metaText})` : '';
 
-                sectionHtml += `<p style="margin-bottom: 4px;"><strong>Câu ${questionCounter++}${metadataLabel ? ` ${metadataLabel}` : ''}.</strong> ${cleanContent}</p>`;
+                sectionHtml += `<p style="margin-top: 0pt; margin-bottom: 2pt; line-height: 1.15;"><strong>Câu ${questionCounter++}${metadataLabel ? ` ${metadataLabel}` : ''}.</strong> ${cleanContent}</p>`;
                 if (q.questionType === 'multipleChoice' && q.options) {
-                    sectionHtml += '<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0 1.5em; margin-bottom: 1em;">';
+                    sectionHtml += '<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0 1.5em; margin-top: 0pt; margin-bottom: 2pt; line-height: 1.15;">';
                     q.options.forEach((opt: string, i: number) => {
                         const cleanedOpt = opt.replace(/^([A-Da-d]|[1-4])[\.\)\:]\s*/, '').trim();
-                        sectionHtml += `<div style="padding-bottom: 2px;"><strong>${String.fromCharCode(65 + i)}.</strong> ${cleanedOpt}</div>`;
+                        sectionHtml += `<div style="padding-bottom: 2px; margin-top: 0pt; margin-bottom: 2pt;"><strong>${String.fromCharCode(65 + i)}.</strong> ${cleanedOpt}</div>`;
                     });
                     sectionHtml += '</div>';
                 } else if (q.questionType === 'trueFalse' && q.options) {
-                     sectionHtml += '<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0 1.5em; margin-bottom: 1em;">';
+                     sectionHtml += '<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0 1.5em; margin-top: 0pt; margin-bottom: 2pt; line-height: 1.15;">';
                     q.options.forEach((opt: string, i: number) => {
                         const cleanedOpt = opt.replace(/^([A-Da-d]|[1-4])[\.\)\:]\s*/, '').trim();
-                        sectionHtml += `<div style="padding-bottom: 2px;"><strong>${String.fromCharCode(97 + i)}.</strong> ${cleanedOpt}</div>`;
+                        sectionHtml += `<div style="padding-bottom: 2px; margin-top: 0pt; margin-bottom: 2pt;"><strong>${String.fromCharCode(97 + i)}.</strong> ${cleanedOpt}</div>`;
                     });
                     sectionHtml += '</div>';
                 } else {

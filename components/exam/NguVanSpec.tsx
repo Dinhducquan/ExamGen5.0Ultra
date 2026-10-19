@@ -7,19 +7,23 @@ const tableStyle: React.CSSProperties = {
   border: '1px solid black',
   borderCollapse: 'collapse',
   textAlign: 'center',
-  fontSize: '12pt',
-  fontFamily: 'Times New Roman, serif',
+  fontSize: '13pt',
+  fontFamily: '"Times New Roman", Times, serif',
 };
 
 const thStyle: React.CSSProperties = {
   border: '1px solid black',
   padding: '4px',
   fontWeight: 'bold',
+  fontSize: '13pt',
+  fontFamily: '"Times New Roman", Times, serif',
 };
 
 const tdStyle: React.CSSProperties = {
   border: '1px solid black',
   padding: '4px',
+  fontSize: '13pt',
+  fontFamily: '"Times New Roman", Times, serif',
 };
 
 const leftAlign: React.CSSProperties = {
