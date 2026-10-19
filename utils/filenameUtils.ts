@@ -148,3 +148,30 @@ export function generateAutoFilename(
 
   return baseName;
 }
+
+/**
+ * Builds standard ZIP archive filename according to pattern:
+ * Ho_So_Kiem_Tra_[Mon]_[Khoi]_[HocKy]_[NamHoc].zip
+ * Example: "Ho_So_Kiem_Tra_Hoa_Hoc_11_Giua_Ky_I_2026-2027.zip"
+ */
+export function generateZipArchiveFilename(settings?: {
+  subject?: string;
+  grade?: string;
+  examType?: string;
+  year?: string;
+}): string {
+  if (!settings) {
+    return 'Ho_So_Kiem_Tra.zip';
+  }
+
+  const mon = cleanSegment(settings.subject).replace(/\s+/g, '_') || 'Mon_Hoc';
+  const khoi = formatGrade(settings.grade) || 'Khoi';
+  const hocKy = formatExamType(settings.examType).replace(/\s+/g, '_') || 'Kiem_Tra';
+  let namHoc = (settings.year || '')
+    .trim()
+    .replace(/[\s–—]+/g, '-')
+    .replace(/[^\w-]/g, '');
+  if (!namHoc) namHoc = '2026-2027';
+
+  return `Ho_So_Kiem_Tra_${mon}_${khoi}_${hocKy}_${namHoc}.zip`;
+}

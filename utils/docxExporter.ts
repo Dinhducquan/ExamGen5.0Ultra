@@ -28,14 +28,15 @@ export function cleanHtmlForDocx(rawHtml: string): string {
   <meta charset="utf-8">
   <title>Exam Document</title>
   <style>
-    body { font-family: 'Times New Roman', serif; font-size: 13pt; line-height: 1.5; }
-    h1, h2, h3, h4 { font-weight: bold; font-family: 'Times New Roman', serif; margin-top: 12pt; margin-bottom: 6pt; }
+    body { font-family: 'Times New Roman', serif; font-size: 13pt; line-height: 1.5; color: #000000; }
+    h1, h2, h3, h4 { font-weight: bold; font-family: 'Times New Roman', serif; margin-top: 12pt; margin-bottom: 6pt; text-align: center; }
     table { border-collapse: collapse; width: 100%; margin-top: 10pt; margin-bottom: 10pt; }
     th, td { border: 1px solid #000000; padding: 6pt; font-size: 11pt; text-align: left; vertical-align: top; }
-    th { font-weight: bold; background-color: #f2f2f2; }
+    th { font-weight: bold; background-color: #f2f2f2; text-align: center; }
     p { margin-bottom: 6pt; margin-top: 0; }
     strong, b { font-weight: bold; }
     em, i { font-style: italic; }
+    .page-break { page-break-before: always; mso-break-type: section-break; }
   </style>
 </head>
 <body>
@@ -44,15 +45,14 @@ export function cleanHtmlForDocx(rawHtml: string): string {
 </html>`;
 }
 
-/**
- * Generates and downloads a real Microsoft Word (.docx) file (OpenXML standard ZIP format).
- * Opens natively in Word 2013-2021, Word 365, Google Docs, WPS Office without corruption errors.
- */
-export async function exportToDocx(htmlContent: string, options: DocxExportOptions): Promise<void> {
+export async function generateDocxBlob(
+  htmlContent: string,
+  orientation: 'portrait' | 'landscape' = 'portrait'
+): Promise<Blob> {
   const formattedHtml = cleanHtmlForDocx(htmlContent);
 
   const docxBlob = await asBlob(formattedHtml, {
-    orientation: 'portrait',
+    orientation,
     margins: {
       top: 1440,    // 1 inch
       right: 1440,  // 1 inch
@@ -61,10 +61,21 @@ export async function exportToDocx(htmlContent: string, options: DocxExportOptio
     },
   });
 
-  // Ensure blob is typed correctly
-  const blob = docxBlob instanceof Blob 
+  return docxBlob instanceof Blob 
     ? docxBlob 
     : new Blob([docxBlob as any], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+}
+
+/**
+ * Generates and downloads a real Microsoft Word (.docx) file (OpenXML standard ZIP format).
+ * Opens natively in Word 2013-2021, Word 365, Google Docs, WPS Office without corruption errors.
+ */
+export async function exportToDocx(
+  htmlContent: string,
+  options: DocxExportOptions,
+  orientation: 'portrait' | 'landscape' = 'portrait'
+): Promise<void> {
+  const blob = await generateDocxBlob(htmlContent, orientation);
 
   const filename = generateAutoFilename(options.filename, 'docx', {
     subject: options.subject,

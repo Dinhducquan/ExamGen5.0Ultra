@@ -23,13 +23,28 @@ import { generateAutoFilename } from '../../utils/filenameUtils';
 import { sanitizeStudentExamContent } from '../mix/MixExamWorkspace';
 
 
+import { FolderArchive } from 'lucide-react';
+import { packExamArchive } from '../../utils/archivePacker';
+
 const DocumentPreview: React.FC<{
   examType: string;
   content: React.ReactNode;
   showCode?: string;
   docType: string;
   questionCount?: number;
-}> = ({ examType, content, showCode, docType, questionCount: propQuestionCount }) => {
+  onDownloadZip?: () => void;
+  isZipping?: boolean;
+  zipProgress?: string;
+}> = ({ 
+  examType, 
+  content, 
+  showCode, 
+  docType, 
+  questionCount: propQuestionCount,
+  onDownloadZip,
+  isZipping,
+  zipProgress
+}) => {
     const { settings } = useSettings();
     const { advSettings } = useAdvancedSettings();
     const { addToast } = useToast();
@@ -115,6 +130,22 @@ const DocumentPreview: React.FC<{
                     <span>Lưu trữ & Tải xuống tệp văn bản</span>
                 </div>
                 <div className="flex items-center gap-2">
+                    {onDownloadZip && (
+                        <Button
+                            onClick={onDownloadZip}
+                            disabled={isZipping}
+                            size="sm"
+                            className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-bold text-xs shadow-sm border border-amber-400/40 cursor-pointer flex items-center gap-1.5 transition-all active:scale-95 disabled:opacity-75 disabled:cursor-not-allowed"
+                            title="Tải toàn bộ hồ sơ kiểm tra gồm Ma trận, Bản đặc tả, Báo cáo cấu trúc, Đề chính (giữ mức độ & địa chỉ), Đáp án đề chính, Các đề hoán vị học sinh và Đề cương dưới dạng tệp nén .ZIP"
+                        >
+                            {isZipping ? (
+                                <RefreshCw size={13} className="animate-spin shrink-0" />
+                            ) : (
+                                <FolderArchive size={13} className="shrink-0 text-amber-200" />
+                            )}
+                            <span>{isZipping ? (zipProgress || "Đang đóng gói ZIP...") : "Tải toàn bộ hồ sơ (.ZIP)"}</span>
+                        </Button>
+                    )}
                     <Button
                         onClick={handleDownloadDocx}
                         size="sm"
@@ -222,6 +253,39 @@ export default function ResultsWorkspace({ examData, setExamData, outlineData, m
   const { t } = useI18n();
   const selectedSubject = settings.subject;
   const [selectedMixedCode, setSelectedMixedCode] = useState<string | null>(null);
+  const [isZipping, setIsZipping] = useState(false);
+  const [zipProgress, setZipProgress] = useState<string>('');
+  const { addToast } = useToast();
+
+  const handleDownloadAllZip = async () => {
+    if (!examData || (!examData.examContent && (!examData.topics || examData.topics.length === 0))) {
+      addToast('Vui lòng hoàn thành tạo đề trước khi tải toàn bộ hồ sơ', 'error');
+      return;
+    }
+
+    setIsZipping(true);
+    setZipProgress('Đang chuẩn bị hồ sơ...');
+    try {
+      const filename = await packExamArchive({
+        examData,
+        outlineData,
+        mixedExamData,
+        settings,
+        examSettings,
+        questionCount: totalQuestionsFromExamData || totalQuestionsFromSettings,
+        outlineQuestionCount: totalQuestionsForOutline,
+        onProgress: (status) => setZipProgress(status),
+      });
+
+      addToast(`Đã đóng gói và tải xuống hồ sơ "${filename}" thành công!`, 'success');
+    } catch (err: any) {
+      console.error('Error packing ZIP archive:', err);
+      addToast('Có lỗi xảy ra khi đóng gói tệp ZIP: ' + (err.message || ''), 'error');
+    } finally {
+      setIsZipping(false);
+      setZipProgress('');
+    }
+  };
 
   const totalQuestionsFromExamData = useMemo(() => {
     return examData?.questions?.length;
@@ -302,6 +366,20 @@ export default function ResultsWorkspace({ examData, setExamData, outlineData, m
                     </Select>
                 </div>
             )}
+            <Button
+                onClick={handleDownloadAllZip}
+                disabled={isZipping}
+                size="sm"
+                className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-bold text-xs shadow-md border border-amber-400/40 cursor-pointer flex items-center gap-1.5 transition-all active:scale-95 disabled:opacity-75 disabled:cursor-not-allowed"
+                title="Tải toàn bộ hồ sơ kiểm tra gồm Ma trận, Bản đặc tả, Báo cáo cấu trúc, Đề chính (giữ mức độ & địa chỉ), Đáp án đề chính, Các đề hoán vị học sinh và Đề cương dưới dạng tệp nén .ZIP"
+            >
+                {isZipping ? (
+                    <RefreshCw size={14} className="animate-spin shrink-0" />
+                ) : (
+                    <FolderArchive size={14} className="shrink-0 text-amber-200" />
+                )}
+                <span>{isZipping ? (zipProgress || "Đang đóng gói ZIP...") : "Tải toàn bộ hồ sơ (.ZIP)"}</span>
+            </Button>
             <Button onClick={() => window.print()}>
                 <Printer className="w-4 h-4 mr-2" />
                 {t('results.printAllButton')}
@@ -323,63 +401,177 @@ export default function ResultsWorkspace({ examData, setExamData, outlineData, m
 
         <TabsContent value="matrix">
             {selectedSubject === 'Ngữ văn' ? (
-                <DocumentPreview docType="MaTrận" examType="MA TRẬN ĐỀ KIỂM TRA MÔN NGỮ VĂN" content={<NguVanMatrix examSettings={examSettings} />} questionCount={totalQuestionsFromSettings} />
+                <DocumentPreview 
+                  docType="MaTrận" 
+                  examType="MA TRẬN ĐỀ KIỂM TRA MÔN NGỮ VĂN" 
+                  content={<NguVanMatrix examSettings={examSettings} />} 
+                  questionCount={totalQuestionsFromSettings}
+                  onDownloadZip={handleDownloadAllZip}
+                  isZipping={isZipping}
+                  zipProgress={zipProgress}
+                />
             ) : (
-                <DocumentPreview docType="MaTrận" examType="MA TRẬN ĐỀ KIỂM TRA ĐỊNH KÌ" content={<Cv7991Matrix data={examData} examSettings={examSettings} generalSettings={settings} />} questionCount={totalQuestionsFromSettings} />
+                <DocumentPreview 
+                  docType="MaTrận" 
+                  examType="MA TRẬN ĐỀ KIỂM TRA ĐỊNH KÌ" 
+                  content={<Cv7991Matrix data={examData} examSettings={examSettings} generalSettings={settings} />} 
+                  questionCount={totalQuestionsFromSettings}
+                  onDownloadZip={handleDownloadAllZip}
+                  isZipping={isZipping}
+                  zipProgress={zipProgress}
+                />
             )}
         </TabsContent>
         <TabsContent value="spec">
             {selectedSubject === 'Ngữ văn' ? (
-                 <DocumentPreview docType="BảngĐặcTả" examType="BẢN ĐẶC TẢ KĨ THUẬT ĐỀ KIỂM TRA NGỮ VĂN" content={<NguVanSpec examSettings={examSettings} />} questionCount={totalQuestionsFromSettings} />
+                 <DocumentPreview 
+                   docType="BảngĐặcTả" 
+                   examType="BẢN ĐẶC TẢ KĨ THUẬT ĐỀ KIỂM TRA NGỮ VĂN" 
+                   content={<NguVanSpec examSettings={examSettings} />} 
+                   questionCount={totalQuestionsFromSettings}
+                   onDownloadZip={handleDownloadAllZip}
+                   isZipping={isZipping}
+                   zipProgress={zipProgress}
+                 />
             ) : (
-                <DocumentPreview docType="BảngĐặcTả" examType="BẢNG ĐẶC TẢ ĐỀ KIỂM TRA ĐỊNH KÌ" content={<Cv7991Spec data={examData} examSettings={examSettings} generalSettings={settings} />} questionCount={totalQuestionsFromSettings} />
+                <DocumentPreview 
+                  docType="BảngĐặcTả" 
+                  examType="BẢNG ĐẶC TẢ ĐỀ KIỂM TRA ĐỊNH KÌ" 
+                  content={<Cv7991Spec data={examData} examSettings={examSettings} generalSettings={settings} />} 
+                  questionCount={totalQuestionsFromSettings}
+                  onDownloadZip={handleDownloadAllZip}
+                  isZipping={isZipping}
+                  zipProgress={zipProgress}
+                />
             )}
         </TabsContent>
         <TabsContent value="structure-report">
-          <div 
-            className="border rounded-lg bg-white dark:bg-slate-950 shadow-sm h-[65vh] overflow-auto"
-            data-doc-type="BaoCaoDoiChieu"
-          >
-            <StructureReport 
-              report={examData?.validationReport} 
-              topics={examData?.topics}
-              settings={settings}
+            <DocumentPreview 
+                docType="BáoCáoĐốiChiếu" 
+                examType="BÁO CÁO ĐỐI CHIẾU CẤU TRÚC ĐỀ THI" 
+                content={
+                    <StructureReport 
+                        report={examData?.validationReport} 
+                        topics={examData?.topics} 
+                        settings={settings} 
+                    />
+                } 
+                questionCount={totalQuestionsFromExamData || totalQuestionsFromSettings}
+                onDownloadZip={handleDownloadAllZip}
+                isZipping={isZipping}
+                zipProgress={zipProgress}
             />
-          </div>
         </TabsContent>
         <TabsContent value="main-exam">
            {examData?.examContent ? (
-                <DocumentPreview docType="ĐềChính" examType={settings.examType.toUpperCase() || "ĐỀ KIỂM TRA"} content={examData.examContent} questionCount={totalQuestionsFromExamData} />
+                <DocumentPreview 
+                  docType="ĐềChính" 
+                  examType={settings.examType.toUpperCase() || "ĐỀ KIỂM TRA"} 
+                  content={examData.examContent} 
+                  questionCount={totalQuestionsFromExamData}
+                  onDownloadZip={handleDownloadAllZip}
+                  isZipping={isZipping}
+                  zipProgress={zipProgress}
+                />
             ) : (
-                <DocumentPreview docType="ĐềChính" examType={settings.examType.toUpperCase() || "ĐỀ KIỂM TRA"} content={<PlaceholderContent title={t('results.placeholderTitle')} subtitle={t('results.placeholderSubtitle')} />} />
+                <DocumentPreview 
+                  docType="ĐềChính" 
+                  examType={settings.examType.toUpperCase() || "ĐỀ KIỂM TRA"} 
+                  content={<PlaceholderContent title={t('results.placeholderTitle')} subtitle={t('results.placeholderSubtitle')} />}
+                  onDownloadZip={handleDownloadAllZip}
+                  isZipping={isZipping}
+                  zipProgress={zipProgress}
+                />
             )}
         </TabsContent>
         <TabsContent value="main-answers">
             {examData?.answerContent ? (
-                <DocumentPreview docType="ĐápÁn_ĐềChính" examType={`ĐÁP ÁN ${settings.examType.toUpperCase()}` || "ĐÁP ÁN ĐỀ KIỂM TRA"} content={examData.answerContent} questionCount={totalQuestionsFromExamData} />
+                <DocumentPreview 
+                  docType="ĐápÁn_ĐềChính" 
+                  examType={`ĐÁP ÁN ${settings.examType.toUpperCase()}` || "ĐÁP ÁN ĐỀ KIỂM TRA"} 
+                  content={examData.answerContent} 
+                  questionCount={totalQuestionsFromExamData}
+                  onDownloadZip={handleDownloadAllZip}
+                  isZipping={isZipping}
+                  zipProgress={zipProgress}
+                />
             ) : (
-                <DocumentPreview docType="ĐápÁn_ĐềChính" examType={`ĐÁP ÁN ${settings.examType.toUpperCase()}` || "ĐÁP ÁN ĐỀ KIỂM TRA"} content={<PlaceholderContent title={t('results.placeholderTitle')} subtitle={t('results.placeholderSubtitle')} />} />
+                <DocumentPreview 
+                  docType="ĐápÁn_ĐềChính" 
+                  examType={`ĐÁP ÁN ${settings.examType.toUpperCase()}` || "ĐÁP ÁN ĐỀ KIỂM TRA"} 
+                  content={<PlaceholderContent title={t('results.placeholderTitle')} subtitle={t('results.placeholderSubtitle')} />}
+                  onDownloadZip={handleDownloadAllZip}
+                  isZipping={isZipping}
+                  zipProgress={zipProgress}
+                />
             )}
         </TabsContent>
         <TabsContent value="mixed-exam">
             {selectedMixedExam ? (
-                <DocumentPreview docType={`ĐềTrộn_Mã${selectedMixedExam.code}`} examType={settings.examType.toUpperCase() || "ĐỀ KIỂM TRA"} showCode={selectedMixedExam.code} content={typeof selectedMixedExam.examContent === 'string' ? sanitizeStudentExamContent(selectedMixedExam.examContent) : selectedMixedExam.examContent} questionCount={totalQuestionsFromExamData} />
+                <DocumentPreview 
+                  docType={`ĐềTrộn_Mã${selectedMixedExam.code}`} 
+                  examType={settings.examType.toUpperCase() || "ĐỀ KIỂM TRA"} 
+                  showCode={selectedMixedExam.code} 
+                  content={typeof selectedMixedExam.examContent === 'string' ? sanitizeStudentExamContent(selectedMixedExam.examContent) : selectedMixedExam.examContent} 
+                  questionCount={totalQuestionsFromExamData}
+                  onDownloadZip={handleDownloadAllZip}
+                  isZipping={isZipping}
+                  zipProgress={zipProgress}
+                />
             ) : (
-                <DocumentPreview docType="ĐềTrộn" examType="ĐỀ KIỂM TRA" content={<PlaceholderContent title={t('results.placeholderMixedTitle')} subtitle={t('results.placeholderMixedSubtitle')} />} />
+                <DocumentPreview 
+                  docType="ĐềTrộn" 
+                  examType="ĐỀ KIỂM TRA" 
+                  content={<PlaceholderContent title={t('results.placeholderMixedTitle')} subtitle={t('results.placeholderMixedSubtitle')} />}
+                  onDownloadZip={handleDownloadAllZip}
+                  isZipping={isZipping}
+                  zipProgress={zipProgress}
+                />
             )}
         </TabsContent>
         <TabsContent value="mixed-answers">
             {selectedMixedExam ? (
-                <DocumentPreview docType={`ĐápÁn_ĐềTrộn_Mã${selectedMixedExam.code}`} examType={`ĐÁP ÁN ${settings.examType.toUpperCase()}` || "ĐÁP ÁN ĐỀ KIỂM TRA"} showCode={selectedMixedExam.code} content={selectedMixedExam.answerContent} questionCount={totalQuestionsFromExamData} />
+                <DocumentPreview 
+                  docType={`ĐápÁn_ĐềTrộn_Mã${selectedMixedExam.code}`} 
+                  examType={`ĐÁP ÁN ${settings.examType.toUpperCase()}` || "ĐÁP ÁN ĐỀ KIỂM TRA"} 
+                  showCode={selectedMixedExam.code} 
+                  content={selectedMixedExam.answerContent} 
+                  questionCount={totalQuestionsFromExamData}
+                  onDownloadZip={handleDownloadAllZip}
+                  isZipping={isZipping}
+                  zipProgress={zipProgress}
+                />
             ) : (
-                <DocumentPreview docType="ĐápÁn_ĐềTrộn" examType="ĐÁP ÁN ĐỀ KIỂM TRA" content={<PlaceholderContent title={t('results.placeholderMixedTitle')} subtitle={t('results.placeholderMixedSubtitle')} />} />
+                <DocumentPreview 
+                  docType="ĐápÁn_ĐềTrộn" 
+                  examType="ĐÁP ÁN ĐỀ KIỂM TRA" 
+                  content={<PlaceholderContent title={t('results.placeholderMixedTitle')} subtitle={t('results.placeholderMixedSubtitle')} />}
+                  onDownloadZip={handleDownloadAllZip}
+                  isZipping={isZipping}
+                  zipProgress={zipProgress}
+                />
             )}
         </TabsContent>
         <TabsContent value="outline">
             {outlineData ? (
-                 <DocumentPreview docType="ĐềCươngÔnTập" examType="ĐỀ CƯƠNG ÔN TẬP" content={outlineData} questionCount={totalQuestionsForOutline} />
+                 <DocumentPreview 
+                   docType="ĐềCươngÔnTập" 
+                   examType="ĐỀ CƯƠNG ÔN TẬP" 
+                   content={outlineData} 
+                   questionCount={totalQuestionsForOutline}
+                   onDownloadZip={handleDownloadAllZip}
+                   isZipping={isZipping}
+                   zipProgress={zipProgress}
+                 />
             ) : (
-                 <DocumentPreview docType="ĐềCươngÔnTập" examType="ĐỀ CƯƠNG ÔN TẬP" content={<PlaceholderContent title={t('results.placeholderOutlineTitle')} subtitle={t('results.placeholderOutlineSubtitle')} />} />
+                 <DocumentPreview 
+                   docType="ĐềCươngÔnTập" 
+                   examType="ĐỀ CƯƠNG ÔN TẬP" 
+                   content={<PlaceholderContent title={t('results.placeholderOutlineTitle')} subtitle={t('results.placeholderOutlineSubtitle')} />}
+                   onDownloadZip={handleDownloadAllZip}
+                   isZipping={isZipping}
+                   zipProgress={zipProgress}
+                 />
             )}
         </TabsContent>
       </Tabs>

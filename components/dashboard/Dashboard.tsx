@@ -47,7 +47,7 @@ export default function Dashboard({ setCurrentPage = () => {}, currentUser }: Da
             <div className="space-y-2">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 dark:bg-indigo-500/10 border border-indigo-500/20 text-indigo-700 dark:text-indigo-300 text-xs font-semibold">
                 <Sparkles className="w-3.5 h-3.5 text-amber-500 dark:text-cyan-300 animate-pulse" />
-                <span>Phiên bản ExamGen Ultra 5.0 Pro</span>
+                <span>Phiên bản ExamGen Ultra 5.0</span>
               </div>
 
               <h1 className="text-2xl sm:text-3xl font-black text-stone-900 dark:text-white tracking-tight">
