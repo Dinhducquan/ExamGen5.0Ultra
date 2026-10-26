@@ -8,6 +8,7 @@ import { Checkbox } from "../ui/Checkbox";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../ui/Table";
 import { Badge } from "../ui/Badge";
 import { Users, Search, Plus, MoreHorizontal, ChevronLeft, ChevronRight, Edit, Trash2, Lock, Unlock, KeyRound, XCircle, Upload, Loader2, FolderCog, Zap, User as UserIcon, Info, Shield, BookOpen, KeySquare } from "../icons";
+import { ArrowUpDown, ArrowUp, ArrowDown, RotateCcw } from "lucide-react";
 import { useToast } from "../../hooks/useToast";
 import { User } from "../../types";
 import { PROFESSIONAL_GROUPS, SCHOOLS_BY_PROVINCE } from "../../constants";
@@ -19,6 +20,15 @@ import { checkIsUserLicensed, activateUserAccount, deactivateUserAccount } from 
 
 const DEFAULT_ITEMS_PER_PAGE = 10;
 const FILTERS_STORAGE_KEY = 'form_user_management_filters';
+
+export type SortColumnKey = 'name' | 'username' | 'role' | 'license' | 'usage' | 'status';
+
+export interface UserManagementFilters {
+    searchQuery: string;
+    roleFilter: string;
+    statusFilter: string;
+    licenseFilter: string;
+}
 
 interface UserManagementWorkspaceProps {
     users: User[];
@@ -37,7 +47,7 @@ export default function UserManagementWorkspace({ users, setUsers, currentUser, 
     const [isBulkRoleModalOpen, setIsBulkRoleModalOpen] = useState(false);
     const [isLicenseGeneratorOpen, setIsLicenseGeneratorOpen] = useState(false);
     const actionMenuRef = useRef<HTMLDivElement>(null);
-    const [sortConfig, setSortConfig] = useState<{ key: keyof User; direction: 'ascending' | 'descending' } | null>(null);
+    const [sortConfig, setSortConfig] = useState<{ key: SortColumnKey; direction: 'ascending' | 'descending' } | null>(null);
     const [recentlyModifiedId, setRecentlyModifiedId] = useState<number | null>(null);
 
     const allSchools = useMemo(() => {
@@ -57,17 +67,18 @@ export default function UserManagementWorkspace({ users, setUsers, currentUser, 
         } catch (e) { return ''; }
     });
 
-    const [filters, setFilters] = useState(() => {
+    const [filters, setFilters] = useState<UserManagementFilters>(() => {
         try {
             const saved = localStorage.getItem(FILTERS_STORAGE_KEY);
             const parsed = saved ? JSON.parse(saved) : {};
             return {
                 searchQuery: parsed.searchQuery || '',
                 roleFilter: parsed.roleFilter || 'all',
-                statusFilter: parsed.statusFilter || 'all'
+                statusFilter: parsed.statusFilter || 'all',
+                licenseFilter: parsed.licenseFilter || 'all'
             };
         } catch (e) {
-            return { searchQuery: '', roleFilter: 'all', statusFilter: 'all' };
+            return { searchQuery: '', roleFilter: 'all', statusFilter: 'all', licenseFilter: 'all' };
         }
     });
     
@@ -100,20 +111,32 @@ export default function UserManagementWorkspace({ users, setUsers, currentUser, 
     const handleSearch = () => {
         setFilters(prev => ({...prev, searchQuery: searchInputValue}));
         setCurrentPage(1);
-    }
+    };
 
     const handleClearSearch = () => {
         setSearchInputValue('');
         setFilters(prev => ({...prev, searchQuery: ''}));
         setCurrentPage(1);
-    }
+    };
 
-    const requestSort = (key: keyof User) => {
+    const handleResetAllFilters = () => {
+        setSearchInputValue('');
+        setFilters({
+            searchQuery: '',
+            roleFilter: 'all',
+            statusFilter: 'all',
+            licenseFilter: 'all'
+        });
+        setSortConfig(null);
+        setCurrentPage(1);
+    };
+
+    const requestSort = (key: SortColumnKey) => {
         if (sortConfig && sortConfig.key === key) {
             if (sortConfig.direction === 'ascending') {
                 setSortConfig({ key, direction: 'descending' });
             } else {
-                setSortConfig(null); // Clear sort on third click
+                setSortConfig(null); // Clear sort on third click (returns to default)
             }
         } else {
             setSortConfig({ key, direction: 'ascending' });
@@ -121,7 +144,7 @@ export default function UserManagementWorkspace({ users, setUsers, currentUser, 
         setCurrentPage(1); // Reset to first page on sort
     };
 
-    const handleSelectFilterChange = (filterName: 'roleFilter' | 'statusFilter', value: string) => {
+    const handleSelectFilterChange = (filterName: keyof UserManagementFilters, value: string) => {
         setFilters((prev) => ({ ...prev, [filterName]: value }));
         setCurrentPage(1);
     };
@@ -129,30 +152,98 @@ export default function UserManagementWorkspace({ users, setUsers, currentUser, 
     const filteredUsers = useMemo(() => {
         return users.filter(user => {
             const searchLower = filters.searchQuery.toLowerCase();
-            const matchesSearch = user.name.toLowerCase().includes(searchLower) || user.email.toLowerCase().includes(searchLower) || user.username.toLowerCase().includes(searchLower);
+            const matchesSearch = !filters.searchQuery ||
+                (user.name && user.name.toLowerCase().includes(searchLower)) || 
+                (user.email && user.email.toLowerCase().includes(searchLower)) || 
+                (user.username && user.username.toLowerCase().includes(searchLower));
             const matchesRole = filters.roleFilter === 'all' || user.role === filters.roleFilter;
             const matchesStatus = filters.statusFilter === 'all' || user.status === filters.statusFilter;
-            return matchesSearch && matchesRole && matchesStatus;
+
+            // Bộ lọc theo bản quyền người dùng
+            const isLicensed = checkIsUserLicensed(user);
+            const matchesLicense = (() => {
+                if (filters.licenseFilter === 'all') return true;
+                if (filters.licenseFilter === 'pro') return user.role !== 'Quản trị hệ thống' && isLicensed;
+                if (filters.licenseFilter === 'trial') return user.role !== 'Quản trị hệ thống' && !isLicensed;
+                if (filters.licenseFilter === 'admin') return user.role === 'Quản trị hệ thống';
+                return true;
+            })();
+
+            return matchesSearch && matchesRole && matchesStatus && matchesLicense;
         });
     }, [filters, users]);
 
     const sortedUsers = useMemo(() => {
         const sortableUsers = [...filteredUsers];
+
+        if (!sortConfig) {
+            // Sắp xếp mặc định: Tài khoản Quản trị hệ thống lên trên cùng, sau đó theo ID
+            return sortableUsers.sort((a, b) => {
+                if (a.role === 'Quản trị hệ thống' && b.role !== 'Quản trị hệ thống') return -1;
+                if (a.role !== 'Quản trị hệ thống' && b.role === 'Quản trị hệ thống') return 1;
+                return a.id - b.id;
+            });
+        }
+
         sortableUsers.sort((a, b) => {
-            if (a.role === 'Quản trị hệ thống' && b.role !== 'Quản trị hệ thống') return -1;
-            if (a.role !== 'Quản trị hệ thống' && b.role === 'Quản trị hệ thống') return 1;
-            if (sortConfig) {
-                const aValue = a[sortConfig.key];
-                const bValue = b[sortConfig.key];
-                if (typeof aValue === 'string' && typeof bValue === 'string') {
-                    const comparison = aValue.localeCompare(bValue, 'vi');
-                    if (comparison !== 0) return sortConfig.direction === 'ascending' ? comparison : -comparison;
+            let comparison = 0;
+
+            switch (sortConfig.key) {
+                case 'name':
+                    comparison = (a.name || '').localeCompare(b.name || '', 'vi', { sensitivity: 'base' });
+                    break;
+
+                case 'username':
+                    comparison = (a.username || '').localeCompare(b.username || '', 'vi');
+                    break;
+
+                case 'role':
+                    comparison = (a.role || '').localeCompare(b.role || '', 'vi');
+                    break;
+
+                case 'license': {
+                    // Thứ hạng bản quyền: Quản trị viên (3) > PRO Vĩnh viễn (2) > Dùng thử (1)
+                    const getLicenseRank = (u: User) => {
+                        if (u.role === 'Quản trị hệ thống') return 3;
+                        if (checkIsUserLicensed(u)) return 2;
+                        return 1;
+                    };
+                    const rankA = getLicenseRank(a);
+                    const rankB = getLicenseRank(b);
+                    if (rankA !== rankB) {
+                        comparison = rankA - rankB;
+                    } else if (rankA === 1) {
+                        // Cùng dùng thử: so sánh theo số lượt đã dùng
+                        comparison = (a.usageCount || 0) - (b.usageCount || 0);
+                    }
+                    break;
                 }
-                if (aValue < bValue) return sortConfig.direction === 'ascending' ? -1 : 1;
-                if (aValue > bValue) return sortConfig.direction === 'ascending' ? 1 : -1;
+
+                case 'usage': {
+                    // Thống kê sử dụng: số lượt đăng nhập / sử dụng (usageCount), nếu bằng so sánh tokenUsage
+                    const usageDiff = (a.usageCount || 0) - (b.usageCount || 0);
+                    if (usageDiff !== 0) {
+                        comparison = usageDiff;
+                    } else {
+                        comparison = (a.tokenUsage || 0) - (b.tokenUsage || 0);
+                    }
+                    break;
+                }
+
+                case 'status':
+                    comparison = (a.status || '').localeCompare(b.status || '', 'vi');
+                    break;
+
+                default:
+                    comparison = 0;
+            }
+
+            if (comparison !== 0) {
+                return sortConfig.direction === 'ascending' ? comparison : -comparison;
             }
             return a.id - b.id;
         });
+
         return sortableUsers;
     }, [filteredUsers, sortConfig]);
 
@@ -421,6 +512,36 @@ export default function UserManagementWorkspace({ users, setUsers, currentUser, 
     
     const isAllSelected = paginatedUsers.length > 0 && paginatedUsers.every(u => selectedIds.has(u.id));
 
+    const renderSortHeader = (label: string, key: SortColumnKey, className = "") => {
+        const isActive = sortConfig?.key === key;
+        const direction = sortConfig?.direction;
+
+        return (
+            <TableHead 
+                className={`cursor-pointer select-none group transition-colors hover:bg-slate-100 dark:hover:bg-slate-800/80 ${className}`}
+                onClick={() => requestSort(key)}
+                title={`Nhấp để sắp xếp theo ${label} (${
+                    !isActive ? 'Tăng dần' : direction === 'ascending' ? 'Giảm dần' : 'Hủy sắp xếp'
+                })`}
+            >
+                <div className="flex items-center gap-1.5 font-semibold">
+                    <span className={isActive ? 'text-indigo-600 dark:text-indigo-400 font-bold' : 'text-slate-700 dark:text-slate-200'}>
+                        {label}
+                    </span>
+                    {isActive ? (
+                        direction === 'ascending' ? (
+                            <ArrowUp className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 shrink-0" />
+                        ) : (
+                            <ArrowDown className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 shrink-0" />
+                        )
+                    ) : (
+                        <ArrowUpDown className="w-3.5 h-3.5 text-slate-400 opacity-40 group-hover:opacity-100 transition-opacity shrink-0" />
+                    )}
+                </div>
+            </TableHead>
+        );
+    };
+
     return (
         <>
             <Card className="shadow-lg border-none bg-white dark:bg-slate-900 h-full flex flex-col">
@@ -458,13 +579,13 @@ export default function UserManagementWorkspace({ users, setUsers, currentUser, 
                     </div>
                 </CardHeader>
                 <CardContent className="flex-grow flex flex-col">
-                    <div className="flex flex-col md:flex-row items-center gap-4 mb-4">
-                        <div className="flex items-center gap-2 w-full md:flex-grow">
+                    <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3 mb-3">
+                        <div className="flex items-center gap-2 flex-grow">
                             <div className="relative flex-grow">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                                 <Input 
-                                    placeholder="Tìm kiếm theo tên, email, tên đăng nhập..." 
-                                    className="pl-10 pr-10"
+                                    placeholder="Tìm kiếm theo họ tên, email, tên đăng nhập..." 
+                                    className="pl-9 pr-9 h-9 text-sm"
                                     value={searchInputValue} 
                                     onChange={(e) => setSearchInputValue(e.target.value)}
                                     onKeyDown={(e) => {
@@ -476,48 +597,122 @@ export default function UserManagementWorkspace({ users, setUsers, currentUser, 
                                 />
                                 {searchInputValue && (
                                     <Button variant="ghost" size="sm" className="absolute right-1 top-1/2 -translate-y-1/2 p-1 h-auto rounded-full" onClick={handleClearSearch}>
-                                        <XCircle className="w-5 h-5 text-slate-400"/>
+                                        <XCircle className="w-4 h-4 text-slate-400 hover:text-slate-600"/>
                                     </Button>
                                 )}
                             </div>
-                            <Button onClick={handleSearch} className="flex-shrink-0">
-                                <Search className="w-4 h-4 mr-2" />
-                                Tìm kiếm
+                            <Button onClick={handleSearch} size="sm" className="flex-shrink-0 h-9">
+                                <Search className="w-4 h-4 mr-1.5" />
+                                Tìm
                             </Button>
                         </div>
 
-                        <div className="flex gap-4 w-full md:w-auto flex-shrink-0">
+                        <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 flex-shrink-0">
+                            {/* Bộ lọc theo bản quyền người dùng */}
+                            <Select onValueChange={(value) => handleSelectFilterChange('licenseFilter', value)} value={filters.licenseFilter}>
+                                <SelectTrigger className="w-full sm:w-[170px] h-9 text-xs bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+                                    <SelectValue placeholder="Lọc theo bản quyền" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">Tất cả bản quyền</SelectItem>
+                                    <SelectItem value="pro">PRO Vĩnh viễn</SelectItem>
+                                    <SelectItem value="trial">Dùng thử</SelectItem>
+                                    <SelectItem value="admin">Quản trị viên</SelectItem>
+                                </SelectContent>
+                            </Select>
+
+                            {/* Bộ lọc theo vai trò */}
                             <Select onValueChange={(value) => handleSelectFilterChange('roleFilter', value)} value={filters.roleFilter}>
-                                <SelectTrigger className="w-full md:w-[180px]"><SelectValue placeholder="Lọc theo vai trò" /></SelectTrigger>
+                                <SelectTrigger className="w-full sm:w-[155px] h-9 text-xs bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+                                    <SelectValue placeholder="Lọc theo vai trò" />
+                                </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="all">Tất cả vai trò</SelectItem>
                                     <SelectItem value="Quản trị hệ thống">Quản trị hệ thống</SelectItem>
                                     <SelectItem value="Giáo viên">Giáo viên</SelectItem>
                                 </SelectContent>
                             </Select>
+
+                            {/* Bộ lọc theo trạng thái */}
                             <Select onValueChange={(value) => handleSelectFilterChange('statusFilter', value)} value={filters.statusFilter}>
-                                <SelectTrigger className="w-full md:w-[180px]"><SelectValue placeholder="Lọc theo trạng thái" /></SelectTrigger>
+                                <SelectTrigger className="w-full sm:w-[150px] h-9 text-xs bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+                                    <SelectValue placeholder="Lọc theo trạng thái" />
+                                </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="all">Tất cả trạng thái</SelectItem>
                                     <SelectItem value="Hoạt động">Hoạt động</SelectItem>
                                     <SelectItem value="Tạm khóa">Tạm khóa</SelectItem>
                                 </SelectContent>
                             </Select>
+
+                            {/* Nút đặt lại bộ lọc */}
+                            {(filters.searchQuery || filters.roleFilter !== 'all' || filters.statusFilter !== 'all' || filters.licenseFilter !== 'all' || sortConfig !== null) && (
+                                <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    onClick={handleResetAllFilters}
+                                    className="h-9 px-2.5 text-xs text-slate-600 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 border-dashed"
+                                    title="Đặt lại toàn bộ bộ lọc và sắp xếp về mặc định"
+                                >
+                                    <RotateCcw className="w-3.5 h-3.5 mr-1" />
+                                    Đặt lại
+                                </Button>
+                            )}
                         </div>
+                    </div>
+
+                    {/* Thanh thông tin số lượng kết quả và trạng thái sắp xếp */}
+                    <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-2.5 px-0.5">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                            <span>Hiển thị <strong className="text-slate-700 dark:text-slate-200">{filteredUsers.length}</strong> / {users.length} người dùng</span>
+                            {filters.licenseFilter !== 'all' && (
+                                <span className="ml-1 px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 font-medium">
+                                    Bản quyền: {filters.licenseFilter === 'pro' ? 'PRO Vĩnh viễn' : filters.licenseFilter === 'trial' ? 'Dùng thử' : 'Quản trị viên'}
+                                </span>
+                            )}
+                            {filters.roleFilter !== 'all' && (
+                                <span className="px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-medium">
+                                    Vai trò: {filters.roleFilter}
+                                </span>
+                            )}
+                            {filters.statusFilter !== 'all' && (
+                                <span className="px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-medium">
+                                    Trạng thái: {filters.statusFilter}
+                                </span>
+                            )}
+                        </div>
+                        {sortConfig && (
+                            <div className="flex items-center gap-1.5 text-indigo-600 dark:text-indigo-400 font-medium">
+                                <span>Sắp xếp: <strong>{
+                                    sortConfig.key === 'name' ? 'Họ và tên' :
+                                    sortConfig.key === 'username' ? 'Tên đăng nhập' :
+                                    sortConfig.key === 'role' ? 'Vai trò' :
+                                    sortConfig.key === 'license' ? 'Bản quyền' :
+                                    sortConfig.key === 'usage' ? 'Thống kê sử dụng' : 'Trạng thái'
+                                }</strong> ({sortConfig.direction === 'ascending' ? 'Tăng dần ↑' : 'Giảm dần ↓'})</span>
+                                <button 
+                                    onClick={() => setSortConfig(null)} 
+                                    className="hover:underline text-[11px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 ml-1"
+                                    title="Hủy sắp xếp"
+                                >
+                                    (Hủy)
+                                </button>
+                            </div>
+                        )}
                     </div>
 
                     <div className="flex-grow overflow-auto">
                         <Table>
                             <TableHeader>
-                                <TableRow>
+                                <TableRow className="bg-slate-50/80 dark:bg-slate-800/50">
                                     <TableHead className="w-[50px]"><Checkbox checked={isAllSelected} onCheckedChange={(checked) => handleSelectAll(Boolean(checked))} /></TableHead>
-                                    <TableHead>Họ và tên</TableHead>
-                                    <TableHead>Tên đăng nhập</TableHead>
-                                    <TableHead>Vai trò</TableHead>
-                                    <TableHead>Bản quyền</TableHead>
-                                    <TableHead>Thống kê sử dụng</TableHead>
-                                    <TableHead>Trạng thái</TableHead>
-                                    <TableHead className="text-right">Hành động</TableHead>
+                                    {renderSortHeader("Họ và tên", "name")}
+                                    {renderSortHeader("Tên đăng nhập", "username")}
+                                    {renderSortHeader("Vai trò", "role")}
+                                    {renderSortHeader("Bản quyền", "license")}
+                                    {renderSortHeader("Thống kê sử dụng", "usage")}
+                                    {renderSortHeader("Trạng thái", "status")}
+                                    <TableHead className="text-right font-semibold text-slate-700 dark:text-slate-200">Hành động</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>

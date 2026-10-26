@@ -31,6 +31,8 @@ export const vi = {
   'header.aiTool': 'AI Tool',
   'header.aiGenerateExam': 'Tạo đề bằng AI',
   'header.exportPrint': 'Xuất file / In ấn',
+  'header.enterFullscreen': 'Toàn màn hình',
+  'header.exitFullscreen': 'Thoát toàn màn hình',
   'header.notifications': 'Thông báo hệ thống',
   'header.machineId': 'Lấy Machine ID',
   'header.systemSettings': 'Cài đặt hệ thống',

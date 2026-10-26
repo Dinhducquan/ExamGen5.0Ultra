@@ -17,6 +17,7 @@ import { useI18n } from '../../hooks/useI18n';
 import { ModelSelectorMenu } from '../ai/ModelSelectorMenu';
 import AIModelCenterModal from '../ai/AIModelCenterModal';
 import { GEMINI_MODELS } from '../../lib/geminiModels';
+import { getStoredApiKey, setStoredApiKey, AIProvider } from '../../lib/multiProviderService';
 
 const settingsCategories = [
   { id: 'general', title: 'Cài đặt Chung', tKey: 'settings.categories.general', icon: <Sliders className="w-5 h-5" /> },
@@ -170,17 +171,31 @@ const AIPanel: React.FC = () => {
     const { advSettings, setAdvSettings } = useAdvancedSettings();
     const { addToast } = useToast();
     const API_KEY_STORAGE_KEY = 'examgen_gemini_api_key';
-    const [apiKey, setApiKey] = useState(() => localStorage.getItem(API_KEY_STORAGE_KEY) || '');
-    const [showKey, setShowKey] = useState(false);
+    const [geminiKey, setGeminiKey] = useState(() => localStorage.getItem(API_KEY_STORAGE_KEY) || getStoredApiKey('google') || '');
+    const [openaiKey, setOpenaiKey] = useState(() => getStoredApiKey('openai'));
+    const [anthropicKey, setAnthropicKey] = useState(() => getStoredApiKey('anthropic'));
+    const [deepseekKey, setDeepseekKey] = useState(() => getStoredApiKey('deepseek'));
+    const [microsoftKey, setMicrosoftKey] = useState(() => getStoredApiKey('microsoft'));
+    
+    const [showKeys, setShowKeys] = useState<Record<string, boolean>>({
+        google: false,
+        openai: false,
+        anthropic: false,
+        deepseek: false,
+        microsoft: false,
+    });
     const [isCenterOpen, setIsCenterOpen] = useState(false);
 
-    const handleSaveKey = () => {
-        if (!apiKey.trim()) {
-            addToast("API Key không được để trống.");
-            return;
+    const toggleShowKey = (provider: string) => {
+        setShowKeys(prev => ({ ...prev, [provider]: !prev[provider] }));
+    };
+
+    const handleSaveKey = (provider: AIProvider, key: string, name: string) => {
+        setStoredApiKey(provider, key.trim());
+        if (provider === 'google') {
+            localStorage.setItem(API_KEY_STORAGE_KEY, key.trim());
         }
-        localStorage.setItem(API_KEY_STORAGE_KEY, apiKey.trim());
-        addToast("Đã cập nhật Gemini API Key.");
+        addToast(`Đã lưu ${name} API Key.`);
     };
 
     return (
@@ -203,23 +218,96 @@ const AIPanel: React.FC = () => {
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="p-0">
-                    <SettingItem title="Google Gemini API Key" description="Cung cấp khóa API Google AI Studio để kích hoạt các mô hình Gemini 3.7 / 3.1.">
+                    <SettingItem title="Google Gemini API Key" description="Cung cấp khóa API Google AI Studio để kích hoạt các mô hình Gemini 3.8 / 3.5 / 2.5.">
                         <div className="flex items-center gap-2">
                             <div className="relative">
                                 <Input
-                                    type={showKey ? 'text' : 'password'}
-                                    value={apiKey}
-                                    onChange={(e) => setApiKey(e.target.value)}
-                                    className="w-64 text-xs"
-                                    placeholder="Nhập API Key của bạn"
+                                    type={showKeys.google ? 'text' : 'password'}
+                                    value={geminiKey}
+                                    onChange={(e) => setGeminiKey(e.target.value)}
+                                    className="w-64 text-xs font-mono"
+                                    placeholder="AIzaSy..."
                                 />
-                                <Button type="button" variant="ghost" size="sm" className="absolute right-1 top-1/2 -translate-y-1/2 p-1 h-auto" onClick={() => setShowKey(!showKey)}>
-                                    {showKey ? <EyeOff size={18}/> : <Eye size={18}/>}
+                                <Button type="button" variant="ghost" size="sm" className="absolute right-1 top-1/2 -translate-y-1/2 p-1 h-auto" onClick={() => toggleShowKey('google')}>
+                                    {showKeys.google ? <EyeOff size={18}/> : <Eye size={18}/>}
                                 </Button>
                             </div>
-                            <Button onClick={handleSaveKey} size="sm">Lưu</Button>
+                            <Button onClick={() => handleSaveKey('google', geminiKey, 'Google Gemini')} size="sm">Lưu</Button>
                         </div>
                     </SettingItem>
+
+                    <SettingItem title="OpenAI API Key" description="Khóa API OpenAI kích hoạt GPT-6.1 Sol, GPT-6 Astra, GPT-6 Luna.">
+                        <div className="flex items-center gap-2">
+                            <div className="relative">
+                                <Input
+                                    type={showKeys.openai ? 'text' : 'password'}
+                                    value={openaiKey}
+                                    onChange={(e) => setOpenaiKey(e.target.value)}
+                                    className="w-64 text-xs font-mono"
+                                    placeholder="sk-proj-..."
+                                />
+                                <Button type="button" variant="ghost" size="sm" className="absolute right-1 top-1/2 -translate-y-1/2 p-1 h-auto" onClick={() => toggleShowKey('openai')}>
+                                    {showKeys.openai ? <EyeOff size={18}/> : <Eye size={18}/>}
+                                </Button>
+                            </div>
+                            <Button onClick={() => handleSaveKey('openai', openaiKey, 'OpenAI')} size="sm">Lưu</Button>
+                        </div>
+                    </SettingItem>
+
+                    <SettingItem title="Anthropic API Key" description="Khóa API Anthropic kích hoạt Claude Opus 5.5, Claude Sonnet 5.5, Claude Fable 5.1.">
+                        <div className="flex items-center gap-2">
+                            <div className="relative">
+                                <Input
+                                    type={showKeys.anthropic ? 'text' : 'password'}
+                                    value={anthropicKey}
+                                    onChange={(e) => setAnthropicKey(e.target.value)}
+                                    className="w-64 text-xs font-mono"
+                                    placeholder="sk-ant-..."
+                                />
+                                <Button type="button" variant="ghost" size="sm" className="absolute right-1 top-1/2 -translate-y-1/2 p-1 h-auto" onClick={() => toggleShowKey('anthropic')}>
+                                    {showKeys.anthropic ? <EyeOff size={18}/> : <Eye size={18}/>}
+                                </Button>
+                            </div>
+                            <Button onClick={() => handleSaveKey('anthropic', anthropicKey, 'Anthropic Claude')} size="sm">Lưu</Button>
+                        </div>
+                    </SettingItem>
+
+                    <SettingItem title="DeepSeek API Key" description="Khóa API DeepSeek kích hoạt DeepSeek-V4 Pro và DeepSeek-V4 Flash.">
+                        <div className="flex items-center gap-2">
+                            <div className="relative">
+                                <Input
+                                    type={showKeys.deepseek ? 'text' : 'password'}
+                                    value={deepseekKey}
+                                    onChange={(e) => setDeepseekKey(e.target.value)}
+                                    className="w-64 text-xs font-mono"
+                                    placeholder="sk-..."
+                                />
+                                <Button type="button" variant="ghost" size="sm" className="absolute right-1 top-1/2 -translate-y-1/2 p-1 h-auto" onClick={() => toggleShowKey('deepseek')}>
+                                    {showKeys.deepseek ? <EyeOff size={18}/> : <Eye size={18}/>}
+                                </Button>
+                            </div>
+                            <Button onClick={() => handleSaveKey('deepseek', deepseekKey, 'DeepSeek')} size="sm">Lưu</Button>
+                        </div>
+                    </SettingItem>
+
+                    <SettingItem title="Microsoft Azure OpenAI Key" description="Khóa API Microsoft Azure OpenAI / Foundry kích hoạt Azure GPT-6.1 Sol & GPT-4o.">
+                        <div className="flex items-center gap-2">
+                            <div className="relative">
+                                <Input
+                                    type={showKeys.microsoft ? 'text' : 'password'}
+                                    value={microsoftKey}
+                                    onChange={(e) => setMicrosoftKey(e.target.value)}
+                                    className="w-64 text-xs font-mono"
+                                    placeholder="Khóa API Azure..."
+                                />
+                                <Button type="button" variant="ghost" size="sm" className="absolute right-1 top-1/2 -translate-y-1/2 p-1 h-auto" onClick={() => toggleShowKey('microsoft')}>
+                                    {showKeys.microsoft ? <EyeOff size={18}/> : <Eye size={18}/>}
+                                </Button>
+                            </div>
+                            <Button onClick={() => handleSaveKey('microsoft', microsoftKey, 'Microsoft Azure')} size="sm">Lưu</Button>
+                        </div>
+                    </SettingItem>
+
                     <SettingItem title="Tự động chuyển mô hình khi nghẽn (Auto-Fallback)" description="Tự động gọi mô hình dự phòng kế tiếp trong chuỗi khi gặp lỗi 429 hoặc hết hạn ngạch API.">
                         <Button 
                             variant="outline" 

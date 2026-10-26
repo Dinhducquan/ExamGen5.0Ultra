@@ -25,6 +25,7 @@ import { safeGenerateContent } from '../../lib/gemini';
 import { getStudentTargetContextDirective } from '../../lib/studentTargetPrompt';
 import * as mammoth from 'mammoth';
 import * as pdfjsLib from 'pdfjs-dist';
+import { callAIModelWithFallback } from '../../lib/multiProviderService';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
@@ -525,13 +526,12 @@ ${extractedText.substring(0, 15000)}
 ---
 Trả về CHÍNH XÁC cấu trúc JSON hợp lệ, không kèm văn bản giải thích thừa.`;
 
-            const response = await safeGenerateContent({
-                model: "gemini-3.8-flash",
-                contents: prompt,
-                generationConfig: {
-                    responseMimeType: "application/json"
-                }
-            });
+            const response = await callAIModelWithFallback(
+                { provider: 'google', modelName: 'gemini-3.8-flash' },
+                prompt,
+                undefined,
+                true
+            );
 
             const parsedData = parseGeminiJson(response.text || '{}');
 

@@ -175,7 +175,9 @@ async function callSingleProvider(
 
     // Copilot Azure OpenAI compatible endpoint or custom endpoint
     const endpoint = localStorage.getItem('examgen_copilot_endpoint') || 'https://api.openai.com/v1';
-    const targetModel = modelConfig.id.replace('copilot-', '');
+    let targetModel = modelConfig.id.replace('copilot-', '');
+    if (modelConfig.id === 'azure-gpt-6-sol') targetModel = 'gpt-6.1-sol';
+    if (modelConfig.id === 'azure-gpt-4o') targetModel = 'gpt-4o';
 
     const res = await fetch(`${endpoint.replace(/\/$/, '')}/chat/completions`, {
       method: 'POST',
@@ -215,12 +217,16 @@ async function callSingleProvider(
     }
 
     const claudeModelMap: Record<string, string> = {
+      'claude-opus-5.5': 'claude-3-opus-20240229',
+      'claude-sonnet-5.5': 'claude-3-5-sonnet-20241022',
+      'claude-fable-5.1': 'claude-3-5-sonnet-20241022',
+      'claude-haiku-5.5': 'claude-3-5-haiku-20241022',
       'claude-3-5-sonnet': 'claude-3-5-sonnet-20241022',
       'claude-3-5-haiku': 'claude-3-5-haiku-20241022',
       'claude-3-opus': 'claude-3-opus-20240229'
     };
 
-    const targetModel = claudeModelMap[modelConfig.id] || 'claude-3-5-sonnet-20241022';
+    const targetModel = claudeModelMap[modelConfig.id] || modelConfig.id;
 
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -228,7 +234,7 @@ async function callSingleProvider(
         'Content-Type': 'application/json',
         'x-api-key': apiKey,
         'anthropic-version': '2023-06-01',
-        'dangerously-allow-browser': 'true'
+        'anthropic-dangerous-direct-browser-access': 'true'
       },
       body: JSON.stringify({
         model: targetModel,
@@ -254,13 +260,18 @@ async function callSingleProvider(
     return { text: outputText, usageMetadata: usage };
   }
 
-  // 5. DEEPSEEK (DeepSeek-V3, DeepSeek-R1)
+  // 5. DEEPSEEK (DeepSeek-V4 Pro, DeepSeek-V4 Flash, DeepSeek-V3, DeepSeek-R1)
   if (modelConfig.provider === 'deepseek') {
     if (!apiKey) {
       throw new Error(`Chưa cấu hình API Key cho DeepSeek AI. Vui lòng nhập Key trong Cài đặt AI.`);
     }
 
-    const targetModel = modelConfig.id === 'deepseek-r1' ? 'deepseek-reasoner' : 'deepseek-chat';
+    let targetModel = 'deepseek-chat';
+    if (modelConfig.id === 'deepseek-r1' || modelConfig.id === 'deepseek-v4-pro') {
+      targetModel = 'deepseek-reasoner';
+    } else if (modelConfig.id === 'deepseek-v4-flash') {
+      targetModel = 'deepseek-chat';
+    }
 
     const res = await fetch('https://api.deepseek.com/chat/completions', {
       method: 'POST',

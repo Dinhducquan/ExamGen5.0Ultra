@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { 
-  Search, 
   Bell, 
   Settings, 
   Printer, 
@@ -15,9 +14,10 @@ import {
   HelpCircle,
   FileCheck,
   ShieldCheck,
-  Zap
+  Zap,
+  Maximize,
+  Minimize
 } from "lucide-react";
-import { Button } from "../ui/Button";
 import { useToast } from "../../hooks/useToast";
 import { Page, User } from "../../types";
 import { useI18n } from "../../hooks/useI18n";
@@ -102,6 +102,63 @@ export default function HeaderNav({ setCurrentPage, handleLogout, currentUser, h
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const isFull = !!(
+        document.fullscreenElement ||
+        (document as any).webkitFullscreenElement ||
+        (document as any).mozFullScreenElement ||
+        (document as any).msFullscreenElement
+      );
+      setIsFullscreen(isFull);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
+    };
+  }, []);
+
+  const toggleFullscreen = async () => {
+    try {
+      if (!isFullscreen) {
+        const elem = document.documentElement as any;
+        if (elem.requestFullscreen) {
+          await elem.requestFullscreen();
+        } else if (elem.webkitRequestFullscreen) {
+          await elem.webkitRequestFullscreen();
+        } else if (elem.mozRequestFullScreen) {
+          await elem.mozRequestFullScreen();
+        } else if (elem.msRequestFullscreen) {
+          await elem.msRequestFullscreen();
+        }
+      } else {
+        const doc = document as any;
+        if (doc.exitFullscreen) {
+          await doc.exitFullscreen();
+        } else if (doc.webkitExitFullscreen) {
+          await doc.webkitExitFullscreen();
+        } else if (doc.mozCancelFullScreen) {
+          await doc.mozCancelFullScreen();
+        } else if (doc.msExitFullscreen) {
+          await doc.msExitFullscreen();
+        }
+      }
+    } catch (err) {
+      console.warn("Fullscreen toggle error:", err);
+      addToast(isFullscreen ? "Không thể thoát toàn màn hình" : "Trình duyệt hoặc khung nhúng giới hạn chế độ toàn màn hình");
+    }
+  };
+
   const handlePrint = () => {
     window.print();
   };
@@ -112,21 +169,8 @@ export default function HeaderNav({ setCurrentPage, handleLogout, currentUser, h
   return (
     <>
       <header id="top-navbar" className="w-full h-16 flex items-center justify-between px-4 sm:px-6 border-b border-[#E7E1D8] dark:border-white/[0.08] bg-[#FAF8F5]/90 dark:bg-[#080B14]/90 backdrop-blur-xl transition-all duration-200 flex-shrink-0 relative z-40 no-print">
-        {/* Left: Quick Search with Command Palette trigger */}
-        <div className="flex-1 max-w-md hidden md:block">
-          <button
-            onClick={() => setIsCommandModalOpen(true)}
-            className="flex items-center justify-between w-full px-3.5 py-1.5 rounded-xl bg-[#F5F1EB] hover:bg-[#EAE3D9] dark:bg-[#111827]/80 dark:hover:bg-[#151B2B] border border-[#E0D8CD] dark:border-white/[0.08] text-stone-600 dark:text-slate-400 hover:text-stone-900 dark:hover:text-slate-200 transition-all text-xs font-medium cursor-pointer group shadow-sm"
-          >
-            <div className="flex items-center gap-2.5">
-              <Search className="w-3.5 h-3.5 text-stone-400 group-hover:text-indigo-600 dark:text-slate-500 dark:group-hover:text-indigo-400 transition-colors" />
-              <span>{t('header.searchDocsPlaceholder', 'Tìm kiếm tài liệu, đề thi, ma trận...')}</span>
-            </div>
-            <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-mono font-medium rounded bg-white dark:bg-white/[0.06] border border-[#E0D8CD] dark:border-white/[0.08] text-stone-600 dark:text-slate-400 shadow-xs">
-              <Command className="w-2.5 h-2.5" /> K
-            </kbd>
-          </button>
-        </div>
+        {/* Left spacer / contextual container */}
+        <div className="flex items-center gap-2"></div>
 
         {/* Right Action Icons & Controls */}
         <div className="flex items-center gap-1.5 sm:gap-2.5 ml-auto">
@@ -158,16 +202,20 @@ export default function HeaderNav({ setCurrentPage, handleLogout, currentUser, h
             />
           </button>
 
-          {/* AI Generator Direct Button */}
-          <Button
-            variant="gradient"
-            size="sm"
-            onClick={() => setCurrentPage('ai-tool')}
-            className="hidden md:inline-flex shadow-glow-sm"
+          {/* Fullscreen Toggle Button */}
+          <button
+            type="button"
+            onClick={toggleFullscreen}
+            title={isFullscreen ? t('header.exitFullscreen', 'Thoát toàn màn hình (Esc)') : t('header.enterFullscreen', 'Toàn màn hình')}
+            className="p-2 rounded-xl text-stone-600 hover:text-stone-900 hover:bg-stone-200/50 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-white/[0.06] transition-colors cursor-pointer"
+            aria-label={isFullscreen ? t('header.exitFullscreen', 'Thoát toàn màn hình') : t('header.enterFullscreen', 'Toàn màn hình')}
           >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>{t('header.aiGenerateExam', 'Tạo đề bằng AI')}</span>
-          </Button>
+            {isFullscreen ? (
+              <Minimize className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+            ) : (
+              <Maximize className="w-4 h-4" />
+            )}
+          </button>
 
           {/* Print / Export Tool */}
           <button

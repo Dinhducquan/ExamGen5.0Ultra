@@ -31,6 +31,8 @@ export const en = {
   'header.aiTool': 'AI Tool',
   'header.aiGenerateExam': 'Create Exam with AI',
   'header.exportPrint': 'Export / Print',
+  'header.enterFullscreen': 'Fullscreen',
+  'header.exitFullscreen': 'Exit Fullscreen',
   'header.notifications': 'System Notifications',
   'header.machineId': 'Get Machine ID',
   'header.systemSettings': 'System Settings',

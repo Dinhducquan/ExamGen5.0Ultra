@@ -192,6 +192,51 @@ export const ALL_AI_MODELS: AIModelConfig[] = [
 
   // --- OPENAI ---
   {
+    id: 'gpt-6.1-sol',
+    name: 'OpenAI GPT-6.1 Sol',
+    provider: 'openai',
+    providerName: 'OpenAI',
+    generation: 'GPT-6 Sol',
+    badge: 'FLAGSHIP CODING & WORK',
+    badgeType: 'latest',
+    speed: 'Siêu tốc (0.6s - 1.0s)',
+    accuracy: 'Chuẩn xác cao nhất (99.98%)',
+    contextWindow: '1,050,000 Tokens',
+    description: 'Thế hệ mô hình GPT-6.1 Sol mới nhất của OpenAI, năng lực xử lý đa nhiệm, soạn đề thi bám sát ma trận và giải thích sâu sắc.',
+    recommendedFor: 'Tất cả các môn thi, soạn đề phân hóa cao, STEM và tự luận phức tạp.',
+    isLatest: true,
+    supportsThinking: true,
+  },
+  {
+    id: 'gpt-6-astra',
+    name: 'OpenAI GPT-6 Astra',
+    provider: 'openai',
+    providerName: 'OpenAI',
+    generation: 'GPT-6 Astra',
+    badge: 'ADVANCED REASONING',
+    badgeType: 'reasoning',
+    speed: 'Chuyên sâu (1.5s - 3.0s)',
+    accuracy: 'Tư duy logic (99.9%)',
+    contextWindow: '1,050,000 Tokens',
+    description: 'Mô hình tư duy nâng cao của thế hệ GPT-6, chuyên trị các bài toán vận dụng cao, phân hóa điểm 9-10 và đề thi học sinh giỏi.',
+    recommendedFor: 'Toán, Lý, Hóa, Sinh vận dụng cao và đề thi học sinh giỏi.',
+    supportsThinking: true,
+  },
+  {
+    id: 'gpt-6-luna',
+    name: 'OpenAI GPT-6 Luna',
+    provider: 'openai',
+    providerName: 'OpenAI',
+    generation: 'GPT-6 Luna',
+    badge: 'LIGHTWEIGHT & HIGH SPEED',
+    badgeType: 'fast',
+    speed: 'Tức thì (< 0.3s)',
+    accuracy: 'Xuất sắc (98.9%)',
+    contextWindow: '1,050,000 Tokens',
+    description: 'Phiên bản gọn nhẹ thế hệ GPT-6, tối ưu hóa tốc độ và tiết kiệm chi phí, phản hồi tức thì cho việc ra đề trắc nghiệm và trộn đề.',
+    recommendedFor: 'Sinh đề trắc nghiệm nhanh, xáo trộn câu hỏi, kiểm tra bài làm.',
+  },
+  {
     id: 'gpt-4o',
     name: 'OpenAI GPT-4o',
     provider: 'openai',
@@ -250,7 +295,22 @@ export const ALL_AI_MODELS: AIModelConfig[] = [
     supportsThinking: true,
   },
 
-  // --- MICROSOFT COPILOT ---
+  // --- MICROSOFT COPILOT & AZURE OPENAI ---
+  {
+    id: 'azure-gpt-6-sol',
+    name: 'Azure OpenAI GPT-6.1 Sol',
+    provider: 'copilot',
+    providerName: 'Microsoft Copilot',
+    generation: 'Azure GPT-6',
+    badge: 'MICROSOFT FOUNDRY • MỚI NHẤT',
+    badgeType: 'latest',
+    speed: 'Siêu tốc (0.6s - 1.1s)',
+    accuracy: 'Doanh nghiệp & Sư phạm (99.95%)',
+    contextWindow: '1,050,000 Tokens',
+    description: 'Phiên bản Azure OpenAI GPT-6.1 Sol bảo mật cấp doanh nghiệp từ Microsoft Foundry & Azure AI.',
+    recommendedFor: 'Hệ thống thi trường học, ma trận chuẩn Bộ GD&ĐT, bảo mật thông tin tối đa.',
+    isLatest: true,
+  },
   {
     id: 'copilot-gpt-4o',
     name: 'Microsoft Copilot GPT-4o',
@@ -282,17 +342,74 @@ export const ALL_AI_MODELS: AIModelConfig[] = [
 
   // --- ANTHROPIC CLAUDE ---
   {
+    id: 'claude-opus-5.5',
+    name: 'Claude Opus 5.5',
+    provider: 'claude',
+    providerName: 'Anthropic Claude',
+    generation: 'Claude 5.5',
+    badge: 'AGENTIC & MASTER • MỚI NHẤT',
+    badgeType: 'latest',
+    speed: 'Chuyên sâu (1.5s - 3.0s)',
+    accuracy: 'Chuẩn mực học thuật (99.98%)',
+    contextWindow: '1,000,000 Tokens',
+    description: 'Mô hình đầu bảng thế hệ Claude 5.5 của Anthropic, khả năng lập luận sư phạm đỉnh cao và hành văn chuẩn mực.',
+    recommendedFor: 'Ngữ văn, Lịch sử, Địa lý, GDCD, bài thi học sinh giỏi và đề tự luận sâu.',
+    isLatest: true,
+  },
+  {
+    id: 'claude-sonnet-5.5',
+    name: 'Claude Sonnet 5.5',
+    provider: 'claude',
+    providerName: 'Anthropic Claude',
+    generation: 'Claude 5.5',
+    badge: 'FAST & BALANCED',
+    badgeType: 'latest',
+    speed: 'Rất nhanh (0.7s - 1.2s)',
+    accuracy: 'Sư phạm tinh tế (99.9%)',
+    contextWindow: '1,000,000 Tokens',
+    description: 'Cân bằng hoàn hảo giữa tốc độ phản hồi nhanh và chất lượng học thuật, phù hợp mọi môn học theo chương trình GDPT 2018.',
+    recommendedFor: 'Mọi môn học, tạo đề kiểm tra 1 tiết, giữa kỳ và cuối kỳ.',
+  },
+  {
+    id: 'claude-fable-5.1',
+    name: 'Claude Fable 5.1',
+    provider: 'claude',
+    providerName: 'Anthropic Claude',
+    generation: 'Claude Fable',
+    badge: 'DEEP RESEARCH & CONTEXT',
+    badgeType: 'reasoning',
+    speed: 'Nghiên cứu (1.8s - 3.5s)',
+    accuracy: 'Độ tin cậy tuyệt đối (99.9%)',
+    contextWindow: '1,000,000 Tokens',
+    description: 'Chuyên nghiên cứu tài liệu dài, trích xuất cấu trúc ma trận từ sách giáo khoa và giáo án dài tập.',
+    recommendedFor: 'Soạn thảo giáo án chuyên đề, đề cương ôn tập tổng hợp.',
+  },
+  {
+    id: 'claude-haiku-5.5',
+    name: 'Claude Haiku 5.5',
+    provider: 'claude',
+    providerName: 'Anthropic Claude',
+    generation: 'Claude 5.5',
+    badge: 'HIGH SPEED & COMPACT',
+    badgeType: 'fast',
+    speed: 'Tức thì (< 0.3s)',
+    accuracy: 'Rất cao (99.0%)',
+    contextWindow: '1,000,000 Tokens',
+    description: 'Tốc độ cực nhanh của dòng Claude 5.5, siêu tiết kiệm token và hiệu năng cao cho trắc nghiệm.',
+    recommendedFor: 'Tạo trắc nghiệm nhanh, kiểm tra định dạng và đáp án.',
+  },
+  {
     id: 'claude-3-5-sonnet',
     name: 'Claude 3.5 Sonnet',
     provider: 'claude',
     providerName: 'Anthropic Claude',
     generation: 'Claude 3.5',
     badge: 'SƯ PHẠM & NGỮ VĂN XUẤT SẮC',
-    badgeType: 'latest',
+    badgeType: 'stable',
     speed: 'Nhanh (0.8s - 1.5s)',
     accuracy: 'Văn phong đỉnh cao (99.8%)',
     contextWindow: '200,000 Tokens',
-    description: 'Mô hình nổi tiếng của Anthropic với khả năng diễn đạt tiếng Việt trau chuốt, tự nhiên, soạn thảo đề Ngữ văn và đọc hiểu rất tinh tế.',
+    description: 'Mô hình của Anthropic với khả năng diễn đạt tiếng Việt trau chuốt, tự nhiên, soạn thảo đề Ngữ văn và đọc hiểu rất tinh tế.',
     recommendedFor: 'Môn Ngữ văn, Lịch sử, Địa lý, GDCD, Tiếng Anh.',
   },
   {
@@ -326,13 +443,43 @@ export const ALL_AI_MODELS: AIModelConfig[] = [
 
   // --- DEEPSEEK ---
   {
+    id: 'deepseek-v4-pro',
+    name: 'DeepSeek-V4 Pro',
+    provider: 'deepseek',
+    providerName: 'DeepSeek AI',
+    generation: 'V4 Pro',
+    badge: 'COMPLEX REASONING • MỚI NHẤT',
+    badgeType: 'latest',
+    speed: 'Nhanh (0.8s - 1.5s)',
+    accuracy: 'Toán học & Khoa học (99.95%)',
+    contextWindow: '1,000,000 Tokens',
+    description: 'Mô hình thế hệ V4 Pro của DeepSeek với tư duy toán học và khoa học tự nhiên xuất sắc, suy luận từng bước chính xác.',
+    recommendedFor: 'Toán học, Vật lý, Hóa học, Sinh học, Tin học, bài toán phân hóa vận dụng cao.',
+    isLatest: true,
+    supportsThinking: true,
+  },
+  {
+    id: 'deepseek-v4-flash',
+    name: 'DeepSeek-V4 Flash',
+    provider: 'deepseek',
+    providerName: 'DeepSeek AI',
+    generation: 'V4 Flash',
+    badge: 'HIGH SPEED & COST-EFFECTIVE',
+    badgeType: 'fast',
+    speed: 'Siêu tốc (0.3s - 0.7s)',
+    accuracy: 'Toán & Khoa học (99.2%)',
+    contextWindow: '1,000,000 Tokens',
+    description: 'Mô hình DeepSeek-V4 Flash thế hệ mới với hiệu năng cực cao, tốc độ tức thì và tối ưu chi phí tối đa.',
+    recommendedFor: 'Trộn đề, tạo trắc nghiệm số lượng lớn, trích xuất ma trận nhanh.',
+  },
+  {
     id: 'deepseek-v3',
     name: 'DeepSeek-V3',
     provider: 'deepseek',
     providerName: 'DeepSeek AI',
     generation: 'V3',
     badge: 'TOÁN HỌC & GIẢI THUẬT',
-    badgeType: 'latest',
+    badgeType: 'stable',
     speed: 'Siêu tốc (0.5s - 1.0s)',
     accuracy: 'Toán & Tự nhiên (99.5%)',
     contextWindow: '128,000 Tokens',
@@ -361,23 +508,24 @@ export const DEFAULT_PRIMARY_MODEL = 'gemini-3.8-flash';
 // Mặc định chuỗi mô hình dự phòng (Default Fallback Chain)
 export const DEFAULT_FALLBACK_CHAIN: string[] = [
   'gemini-3.8-flash',
+  'gpt-6.1-sol',
+  'claude-sonnet-5.5',
+  'deepseek-v4-flash',
   'gemini-4-argon',
   'gemini-3.7-flash',
-  'gemini-3.1-flash-lite',
-  'deepseek-v3',
   'gpt-4o-mini',
   'claude-3-5-haiku'
 ];
 
 /**
- * Lấy danh sách API Key lưu trữ từ LocalStorage
+ * Lấy danh sách API Key lưu trữ từ LocalStorage (đồng bộ cả 2 chuẩn lưu trữ)
  */
 export function getStoredApiKeys(): Record<AIProvider, string> {
-  const geminiKey = localStorage.getItem('examgen_gemini_api_key') || '';
-  const openaiKey = localStorage.getItem('examgen_openai_api_key') || '';
-  const copilotKey = localStorage.getItem('examgen_copilot_api_key') || '';
-  const claudeKey = localStorage.getItem('examgen_anthropic_api_key') || '';
-  const deepseekKey = localStorage.getItem('examgen_deepseek_api_key') || '';
+  const geminiKey = localStorage.getItem('examgen_gemini_api_key') || localStorage.getItem('examgen_apikey_google') || '';
+  const openaiKey = localStorage.getItem('examgen_openai_api_key') || localStorage.getItem('examgen_apikey_openai') || '';
+  const copilotKey = localStorage.getItem('examgen_copilot_api_key') || localStorage.getItem('examgen_apikey_microsoft') || '';
+  const claudeKey = localStorage.getItem('examgen_anthropic_api_key') || localStorage.getItem('examgen_apikey_anthropic') || '';
+  const deepseekKey = localStorage.getItem('examgen_deepseek_api_key') || localStorage.getItem('examgen_apikey_deepseek') || '';
 
   return {
     gemini: geminiKey,
@@ -389,11 +537,24 @@ export function getStoredApiKeys(): Record<AIProvider, string> {
 }
 
 /**
- * Lưu API Key cho một nhà cung cấp cụ thể
+ * Lưu API Key cho một nhà cung cấp cụ thể (đồng bộ cả 2 chuẩn lưu trữ)
  */
 export function saveStoredApiKey(provider: AIProvider, key: string): void {
+  const trimmed = key.trim();
   const info = AI_PROVIDERS[provider];
   if (info) {
-    localStorage.setItem(info.keyStorageKey, key.trim());
+    localStorage.setItem(info.keyStorageKey, trimmed);
+  }
+  // Đồng bộ khóa theo chuẩn examgen_apikey_${provider}
+  const providerMapping: Record<AIProvider, string> = {
+    gemini: 'google',
+    openai: 'openai',
+    copilot: 'microsoft',
+    claude: 'anthropic',
+    deepseek: 'deepseek'
+  };
+  const unifiedName = providerMapping[provider];
+  if (unifiedName) {
+    localStorage.setItem(`examgen_apikey_${unifiedName}`, trimmed);
   }
 }
