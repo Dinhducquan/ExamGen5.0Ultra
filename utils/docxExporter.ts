@@ -104,7 +104,7 @@ export function cleanHtmlForDocx(rawHtml: string): string {
       text-align: center; 
       font-size: 13pt !important; 
     }
-    p { margin-top: 0pt !important; margin-bottom: 2pt !important; font-size: 13pt !important; font-family: 'Times New Roman', Times, serif !important; line-height: 1.15 !important; }
+    p { margin-top: 0pt !important; margin-bottom: 3pt !important; font-size: 13pt !important; font-family: 'Times New Roman', Times, serif !important; line-height: 1.15 !important; text-align: justify !important; }
     strong, b { font-weight: bold; }
     em, i { font-style: italic; }
     .page-break { page-break-before: always; mso-break-type: section-break; }
@@ -125,10 +125,10 @@ export async function generateDocxBlob(
   const docxBlob = await asBlob(formattedHtml, {
     orientation,
     margins: {
-      top: 1440,    // 1 inch
-      right: 1440,  // 1 inch
-      bottom: 1440, // 1 inch
-      left: 1440,   // 1 inch
+      top: 1134,    // 2 cm (Nghị định 30/2020/NĐ-CP)
+      right: 1134,  // 2 cm (Nghị định 30/2020/NĐ-CP)
+      bottom: 1134, // 2 cm (Nghị định 30/2020/NĐ-CP)
+      left: 1701,   // 3 cm (Nghị định 30/2020/NĐ-CP)
     },
   });
 
