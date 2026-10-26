@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import { 
   Search, 
   Bell, 
@@ -27,6 +27,8 @@ import { ModelSelectorMenu } from "../ai/ModelSelectorMenu";
 import { CommandSearchModal } from "./CommandSearchModal";
 import AIModelCenterModal from "../ai/AIModelCenterModal";
 
+import { subscribeAdminNotifications, markNotificationAsRead, markAllNotificationsAsRead, SystemNotification } from "../../lib/notificationService";
+
 interface HeaderNavProps {
   setCurrentPage: (page: Page) => void;
   handleLogout: () => void;
@@ -40,6 +42,7 @@ export default function HeaderNav({ setCurrentPage, handleLogout, currentUser, h
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [notifications, setNotifications] = useState<SystemNotification[]>([]);
   const [isLicenseModalOpen, setIsLicenseModalOpen] = useState(false);
   const [isCommandModalOpen, setIsCommandModalOpen] = useState(false);
   const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
@@ -47,6 +50,17 @@ export default function HeaderNav({ setCurrentPage, handleLogout, currentUser, h
   const [hasGeminiKey, setHasGeminiKey] = useState<boolean>(() => {
     return !!localStorage.getItem('examgen_gemini_api_key');
   });
+
+  useEffect(() => {
+    const unsub = subscribeAdminNotifications((items) => {
+      setNotifications(items);
+    });
+    return () => unsub();
+  }, []);
+
+  const unreadCount = useMemo(() => {
+    return notifications.filter((n) => !n.read).length;
+  }, [notifications]);
 
   useEffect(() => {
     const handleStorageChange = () => {
@@ -207,26 +221,95 @@ export default function HeaderNav({ setCurrentPage, handleLogout, currentUser, h
               title={t('header.notifications', 'Thông báo')}
             >
               <Bell className="w-4 h-4" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-indigo-500 ring-2 ring-[#FAF8F5] dark:ring-[#080B14]" />
+              {unreadCount > 0 ? (
+                <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-rose-500 text-white text-[10px] font-bold ring-2 ring-[#FAF8F5] dark:ring-[#080B14] animate-pulse">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              ) : (
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-indigo-500/50 ring-2 ring-[#FAF8F5] dark:ring-[#080B14]" />
+              )}
             </button>
 
             {isNotificationsOpen && (
-              <div className="absolute right-0 mt-2 w-80 rounded-2xl bg-white dark:bg-[#0F1523] border border-[#E0D8CD] dark:border-white/[0.12] shadow-2xl p-3 z-50 animate-in fade-in zoom-in-95 duration-100">
-                <div className="flex items-center justify-between pb-2 border-b border-[#EFEAE2] dark:border-white/[0.08]">
-                  <span className="text-xs font-bold text-stone-900 dark:text-white">{t('header.notifications', 'Thông báo hệ thống')}</span>
-                  <span className="text-[10px] px-1.5 py-0.2 rounded bg-indigo-50 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 font-semibold">v5.0</span>
+              <div className="absolute right-0 mt-2 w-[360px] sm:w-[480px] md:w-[520px] max-w-[calc(100vw-1.5rem)] rounded-2xl bg-white dark:bg-[#0F1523] border border-[#E0D8CD] dark:border-white/[0.12] shadow-2xl p-4 sm:p-5 z-50 animate-in fade-in zoom-in-95 duration-100">
+                <div className="flex items-center justify-between pb-3 border-b border-[#EFEAE2] dark:border-white/[0.08]">
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-sm font-bold text-stone-900 dark:text-white">{t('header.notifications', 'Thông báo hệ thống')}</span>
+                    {unreadCount > 0 ? (
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300 font-semibold border border-rose-200 dark:border-rose-500/30">
+                        {unreadCount} chưa đọc
+                      </span>
+                    ) : (
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 font-semibold border border-indigo-200 dark:border-indigo-500/30">
+                        v5.0 Ultra
+                      </span>
+                    )}
+                  </div>
+                  {unreadCount > 0 && (
+                    <button
+                      onClick={() => markAllNotificationsAsRead(notifications.filter(n => !n.read).map(n => n.id))}
+                      className="text-xs text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 font-medium transition-colors"
+                    >
+                      Đánh dấu tất cả đã đọc
+                    </button>
+                  )}
                 </div>
-                <div className="py-2 space-y-2 text-xs">
-                  <div className="p-2.5 rounded-xl bg-[#FAF7F2] dark:bg-white/[0.03] border border-[#EAE3D9] dark:border-white/[0.05]">
-                    <p className="font-semibold text-stone-900 dark:text-slate-200">{t('header.notif1Title', 'Giao diện Warm Light + AI Gradient')}</p>
-                    <p className="text-[11px] text-stone-500 dark:text-slate-400 mt-0.5">{t('header.notif1Desc', 'Tone màu ấm thanh lịch, dịu mắt chuẩn SaaS cao cấp đã kích hoạt.')}</p>
-                    <span className="text-[10px] text-stone-400 dark:text-slate-500 mt-1 block">{t('header.notif1Time', 'Vừa xong')}</span>
-                  </div>
-                  <div className="p-2.5 rounded-xl bg-[#FAF7F2] dark:bg-white/[0.03] border border-[#EAE3D9] dark:border-white/[0.05]">
-                    <p className="font-semibold text-stone-900 dark:text-slate-200">{t('header.notif2Title', 'Chuẩn GDPT 2018 sẵn sàng')}</p>
-                    <p className="text-[11px] text-stone-500 dark:text-slate-400 mt-0.5">{t('header.notif2Desc', 'Cập nhật ma trận và bảng đặc tả các môn THCS & THPT.')}</p>
-                    <span className="text-[10px] text-stone-400 dark:text-slate-500 mt-1 block">{t('header.notif2Time', '1 giờ trước')}</span>
-                  </div>
+
+                <div className="py-2.5 space-y-2.5 max-h-96 overflow-y-auto pr-0.5">
+                  {notifications.length > 0 ? (
+                    notifications.map((notif) => (
+                      <div
+                        key={notif.id}
+                        onClick={() => {
+                          if (!notif.read) markNotificationAsRead(notif.id);
+                          if (notif.type === 'user_registration') {
+                            setCurrentPage('users');
+                            setIsNotificationsOpen(false);
+                          }
+                        }}
+                        className={`p-3.5 rounded-xl border transition-all cursor-pointer ${
+                          !notif.read
+                            ? 'bg-amber-50/70 dark:bg-indigo-950/30 border-amber-200 dark:border-indigo-500/40 shadow-xs hover:border-amber-300 dark:hover:border-indigo-400'
+                            : 'bg-[#FAF7F2] dark:bg-white/[0.03] border-[#EAE3D9] dark:border-white/[0.05] opacity-85 hover:opacity-100'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-center gap-2 font-bold text-stone-900 dark:text-slate-100 text-xs sm:text-sm">
+                            {notif.type === 'user_registration' && <Users className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" />}
+                            <span>{notif.title}</span>
+                          </div>
+                          {!notif.read && <span className="w-2.5 h-2.5 rounded-full bg-rose-500 shrink-0 mt-1 ring-4 ring-rose-500/20" />}
+                        </div>
+                        <p className="text-xs text-stone-600 dark:text-slate-300 mt-1.5 leading-relaxed">
+                          {notif.message}
+                        </p>
+                        {notif.type === 'user_registration' && (
+                          <div className="mt-2.5 pt-2 border-t border-stone-200/60 dark:border-white/5 flex items-center justify-between text-xs">
+                            <span className="text-indigo-600 dark:text-indigo-400 font-semibold hover:underline flex items-center gap-1">
+                              <span>▶ Mở trang Quản lý người dùng</span>
+                            </span>
+                            <span className="text-[11px] text-stone-400 dark:text-slate-500">{notif.createdAt}</span>
+                          </div>
+                        )}
+                        {notif.type !== 'user_registration' && (
+                          <span className="text-[11px] text-stone-400 dark:text-slate-500 mt-1.5 block text-right">{notif.createdAt}</span>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <>
+                      <div className="p-3.5 rounded-xl bg-[#FAF7F2] dark:bg-white/[0.03] border border-[#EAE3D9] dark:border-white/[0.05]">
+                        <p className="font-semibold text-stone-900 dark:text-slate-200 text-xs sm:text-sm">{t('header.notif1Title', 'Giao diện Warm Light + AI Gradient')}</p>
+                        <p className="text-xs text-stone-500 dark:text-slate-400 mt-1 leading-relaxed">{t('header.notif1Desc', 'Tone màu ấm thanh lịch, dịu mắt chuẩn SaaS cao cấp đã kích hoạt.')}</p>
+                        <span className="text-[11px] text-stone-400 dark:text-slate-500 mt-1.5 block text-right">{t('header.notif1Time', 'Vừa xong')}</span>
+                      </div>
+                      <div className="p-3.5 rounded-xl bg-[#FAF7F2] dark:bg-white/[0.03] border border-[#EAE3D9] dark:border-white/[0.05]">
+                        <p className="font-semibold text-stone-900 dark:text-slate-200 text-xs sm:text-sm">{t('header.notif2Title', 'Chuẩn GDPT 2018 sẵn sàng')}</p>
+                        <p className="text-xs text-stone-500 dark:text-slate-400 mt-1 leading-relaxed">{t('header.notif2Desc', 'Cập nhật ma trận và bảng đặc tả các môn THCS & THPT.')}</p>
+                        <span className="text-[11px] text-stone-400 dark:text-slate-500 mt-1.5 block text-right">{t('header.notif2Time', '1 giờ trước')}</span>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             )}

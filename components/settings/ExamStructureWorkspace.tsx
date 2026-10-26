@@ -23,6 +23,7 @@ import { useSystemInstruction } from '../../hooks/useSystemInstruction';
 import { useAdvancedSettings } from '../../hooks/useAdvancedSettings';
 import { safeGenerateContent } from '../../lib/gemini';
 import { getStudentTargetContextDirective } from '../../lib/studentTargetPrompt';
+import * as mammoth from 'mammoth';
 
 interface ExamStructureWorkspaceProps {
     setExamData: (data: any) => void;
@@ -408,6 +409,11 @@ export default function ExamStructureWorkspace({ setExamData, setCurrentPage, up
     const [statusMessage, setStatusMessage] = useState('');
     const [uploadedFile, setUploadedFile] = useState<File | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const matrixFileInputRef = useRef<HTMLInputElement>(null);
+    const [isExtractingMatrix, setIsExtractingMatrix] = useState(false);
+    const [matrixExtractStatus, setMatrixExtractStatus] = useState('');
+
     const { addToast } = useToast();
     const { systemInstruction } = useSystemInstruction();
     const { advSettings } = useAdvancedSettings();
@@ -417,6 +423,122 @@ export default function ExamStructureWorkspace({ setExamData, setCurrentPage, up
     const handleMethodChange = (method: 'auto' | 'semiAuto' | 'manual') => {
         setActiveMethod(method);
         setExamSettings(prev => ({ ...prev, creationMethod: method }));
+    };
+
+    const handleMatrixFileSelection = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setIsExtractingMatrix(true);
+        setMatrixExtractStatus(`Đang đọc tệp ${file.name}...`);
+
+        try {
+            let extractedText = '';
+            if (file.name.endsWith('.docx') || file.name.endsWith('.doc')) {
+                const arrayBuffer = await file.arrayBuffer();
+                const result = await mammoth.extractRawText({ arrayBuffer });
+                extractedText = result.value;
+            } else {
+                extractedText = await file.text();
+            }
+
+            if (!extractedText || extractedText.trim().length === 0) {
+                addToast('Không thể trích xuất văn bản từ tệp này.');
+                setIsExtractingMatrix(false);
+                return;
+            }
+
+            setMatrixExtractStatus('Đang phân tích cấu trúc ma trận/đặc tả bằng AI...');
+
+            const prompt = `Bạn là trợ lý AI chuyên gia giáo dục. Hãy phân tích nội dung văn bản/bảng sau đây từ một Ma trận đề kiểm tra hoặc Bản đặc tả kỹ thuật (theo chuẩn GDPT 2018 / CV 7991).
+Môn học hiện tại: ${settings.subject} (${isNguVan ? 'Ngữ văn' : 'Môn chung'}).
+Hãy bóc tách và trích xuất thành cấu trúc JSON chuẩn xác để nạp vào hệ thống cấu hình thủ công của ứng dụng.
+
+Nếu là môn Ngữ văn (isNguVan: true), trả về JSON:
+{
+  "isNguVan": true,
+  "nguVanDocHieuPart": {
+    "passage": "...",
+    "questions": [
+      { "id": "nv-dh-1", "cognitiveLevel": "Nhận biết", "points": "1.0", "requirements": "..." }
+    ]
+  },
+  "nguVanVietPart": {
+    "promptDescription": "...",
+    "usePart1Passage": true,
+    "questions": [
+      { "id": "nv-v-1", "prompt": "...", "pointsBiet": "1.0", "pointsHieu": "2.0", "pointsVd": "3.0", "pointsVdCao": "1.0" }
+    ]
+  }
+}
+
+Nếu là môn học khác (isNguVan: false), trả về JSON:
+{
+  "isNguVan": false,
+  "manualTopics": [
+    {
+      "id": "topic-1",
+      "topicName": "Tên chủ đề / chương",
+      "requirements": "Yêu cầu cần đạt...",
+      "questions": [
+        {
+          "id": "q-1",
+          "questionType": "multipleChoice",
+          "count": "10",
+          "points": "0.25",
+          "distBiet": "3",
+          "distHieu": "4",
+          "distVd": "3",
+          "distVdCao": "0"
+        }
+      ]
+    }
+  ]
+}
+
+Nội dung văn bản được trích xuất từ tệp:
+---
+${extractedText.substring(0, 15000)}
+---
+Trả về CHÍNH XÁC cấu trúc JSON hợp lệ, không kèm văn bản giải thích thừa.`;
+
+            const response = await safeGenerateContent({
+                model: "gemini-3.8-flash",
+                contents: prompt,
+                generationConfig: {
+                    responseMimeType: "application/json"
+                }
+            });
+
+            const parsedData = parseGeminiJson(response.text || '{}');
+
+            if (isNguVan && parsedData.nguVanDocHieuPart) {
+                setExamSettings(prev => ({
+                    ...prev,
+                    manual: {
+                        ...prev.manual,
+                        nguVanDocHieuPart: parsedData.nguVanDocHieuPart || prev.manual.nguVanDocHieuPart,
+                        nguVanVietPart: parsedData.nguVanVietPart || prev.manual.nguVanVietPart,
+                    }
+                }));
+            } else if (!isNguVan && Array.isArray(parsedData.manualTopics) && parsedData.manualTopics.length > 0) {
+                setExamSettings(prev => ({
+                    ...prev,
+                    manual: {
+                        ...prev.manual,
+                        manualTopics: parsedData.manualTopics
+                    }
+                }));
+            }
+
+            addToast('⚡ Đã trích xuất và tự động điền dữ liệu ma trận/đặc tả từ tệp thành công!');
+        } catch (err: any) {
+            console.error("Lỗi trích xuất tệp ma trận:", err);
+            addToast('Lỗi khi phân tích tệp: ' + (err?.message || 'Vui lòng thử lại.'));
+        } finally {
+            setIsExtractingMatrix(false);
+            if (matrixFileInputRef.current) matrixFileInputRef.current.value = '';
+        }
     };
 
     // #region Handlers for Manual Mode (Generic)
@@ -1512,6 +1634,44 @@ Ma trận: \`\`\`json\n${JSON.stringify(topics, null, 2)}\n\`\`\``;
                     </div>
                 </CardContent>
             </Card>
+
+            <Card className="mb-4 border-dashed border-2 border-indigo-300 dark:border-indigo-700 bg-white dark:bg-slate-900 shadow-sm">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-base font-bold text-indigo-900 dark:text-indigo-200">
+                        <Upload size={20} className="text-indigo-600 dark:text-indigo-400"/>
+                        Tải lên tệp Ma trận hoặc Bản đặc tả (.docx, .txt) để tự động trích xuất
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div 
+                        className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl p-6 text-center cursor-pointer hover:border-indigo-500 transition-colors bg-slate-50/50 dark:bg-slate-800/50"
+                        onClick={() => matrixFileInputRef.current?.click()}
+                    >
+                        <FileUp className="mx-auto h-12 w-12 text-indigo-500 mb-2 animate-bounce-short" />
+                        <p className="text-sm font-semibold text-stone-900 dark:text-slate-100">
+                            Nhấp để chọn tệp Word (.docx) hoặc Văn bản (.txt) chứa Ma trận / Bản đặc tả
+                        </p>
+                        <p className="text-xs text-stone-500 dark:text-slate-400 mt-1">
+                            Hệ thống sẽ tự động bóc tách bảng biểu, chủ đề, yêu cầu cần đạt và phân bổ mức độ để điền vào chế độ thủ công.
+                        </p>
+                        <input 
+                            ref={matrixFileInputRef} 
+                            type="file" 
+                            accept=".docx,.doc,.txt" 
+                            className="sr-only" 
+                            onChange={handleMatrixFileSelection} 
+                            disabled={isExtractingMatrix}
+                        />
+                    </div>
+                    {isExtractingMatrix && (
+                        <div className="mt-3 flex items-center justify-center gap-3 p-3 bg-indigo-50 dark:bg-indigo-950/40 rounded-xl border border-indigo-200 dark:border-indigo-800">
+                            <Loader2 className="w-5 h-5 animate-spin text-indigo-600 dark:text-indigo-400" />
+                            <span className="text-sm font-semibold text-indigo-700 dark:text-indigo-300">{matrixExtractStatus}</span>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+
              {isNguVan ? (
                 <div className="space-y-4">
                     <Card>

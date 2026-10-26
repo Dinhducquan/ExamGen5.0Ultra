@@ -8,6 +8,7 @@ import { User } from '../../types';
 import { useI18n } from '../../hooks/useI18n';
 import { useTheme } from '../../hooks/useTheme';
 import { authenticateWithCloud, createUserInCloud } from '../../lib/userService';
+import { createAdminNotification } from '../../lib/notificationService';
 import { SCHOOLS_BY_PROVINCE, PROFESSIONAL_GROUPS } from '../../constants';
 import { ForgotPasswordModal } from './ForgotPasswordModal';
 
@@ -159,6 +160,17 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, users }) => {
 
       // Lưu trữ tập trung trực tiếp lên Cloud Firestore
       await createUserInCloud(newUser);
+
+      // Thông báo cho Quản trị viên (Admin) biết có người dùng đăng ký mới
+      createAdminNotification({
+        type: 'user_registration',
+        title: 'Tài khoản mới đăng ký',
+        message: `Người dùng ${newUser.name} (${newUser.username} - ${newUser.email}) vừa đăng ký tài khoản mới thuộc đơn vị ${newUser.school || 'Chưa cập nhật'}.`,
+        userName: newUser.name,
+        userEmail: newUser.email,
+        school: newUser.school,
+        profGroup: newUser.profGroup,
+      }).catch(err => console.warn('Lỗi gửi thông báo cho Admin:', err));
 
       setRegSuccess('Đăng ký tài khoản thành công lên Cloud Database! Đang chuyển đến đăng nhập...');
       setTimeout(() => {
