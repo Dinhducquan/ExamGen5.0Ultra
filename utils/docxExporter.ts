@@ -11,6 +11,30 @@ export interface DocxExportOptions {
   schoolYear?: string;
 }
 
+export function preprocessMathContent(html: string): string {
+  if (!html) return '';
+  let processed = html;
+
+  // Convert MathML elements to clean Word-compatible HTML representations
+  processed = processed.replace(/<msup[^>]*>\s*<mi[^>]*>(.*?)<\/mi>\s*<mn[^>]*>(.*?)<\/mn>\s*<\/msup>/gi, '<i>$1</i><sup>$2</sup>');
+  processed = processed.replace(/<msup[^>]*>\s*<mrow[^>]*>(.*?)<\/mrow>\s*<mn[^>]*>(.*?)<\/mn>\s*<\/msup>/gi, '($1)<sup>$2</sup>');
+  processed = processed.replace(/<msup[^>]*>(.*?)<\/msup>/gi, '$1');
+
+  processed = processed.replace(/<msub[^>]*>\s*<mi[^>]*>(.*?)<\/mi>\s*<mn[^>]*>(.*?)<\/mn>\s*<\/sub>/gi, '<i>$1</i><sub>$2</sub>');
+  processed = processed.replace(/<msub[^>]*>(.*?)<\/msub>/gi, '$1');
+
+  processed = processed.replace(/<mfrac[^>]*>\s*<mrow[^>]*>(.*?)<\/mrow>\s*<mrow[^>]*>(.*?)<\/mrow>\s*<\/mfrac>/gi, '($1)/($2)');
+  processed = processed.replace(/<mfrac[^>]*>(.*?)<\/mfrac>/gi, '($1)');
+
+  processed = processed.replace(/<msqrt[^>]*>(.*?)<\/msqrt>/gi, '√($1)');
+
+  // Clean remaining MathML tags
+  processed = processed
+    .replace(/<\/?(math|mrow|mi|mn|mo|mroot|mstack|mtable|mtr|mtd)\b[^>]*>/gi, '');
+
+  return processed;
+}
+
 /**
  * Clean up HTML content for HTML-to-DOCX conversion.
  * Ensures inline styles, tables, headings, and paragraphs are formatted properly.
@@ -21,6 +45,8 @@ export function cleanHtmlForDocx(rawHtml: string): string {
     .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') // Remove scripts
     .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')   // Remove internal styles if any
     .replace(/class="[^"]*"/g, '');                                      // Remove Tailwind utility classes that might break parser
+
+  cleaned = preprocessMathContent(cleaned);
 
   return `<!DOCTYPE html>
 <html>

@@ -24,6 +24,27 @@ import { useAdvancedSettings } from '../../hooks/useAdvancedSettings';
 import { safeGenerateContent } from '../../lib/gemini';
 import { getStudentTargetContextDirective } from '../../lib/studentTargetPrompt';
 import * as mammoth from 'mammoth';
+import * as pdfjsLib from 'pdfjs-dist';
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+
+const extractTextFromPDF = async (file: File): Promise<string> => {
+  const arrayBuffer = await file.arrayBuffer();
+  const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+  const pdfDoc = await loadingTask.promise;
+  let fullText = '';
+
+  for (let i = 1; i <= pdfDoc.numPages; i++) {
+    const page = await pdfDoc.getPage(i);
+    const textContent = await page.getTextContent();
+    const pageText = textContent.items
+      .map((item: any) => item.str)
+      .join(' ');
+    fullText += `[Trang ${i}]\n` + pageText + '\n\n';
+  }
+
+  return fullText;
+};
 
 interface ExamStructureWorkspaceProps {
     setExamData: (data: any) => void;
@@ -438,6 +459,8 @@ export default function ExamStructureWorkspace({ setExamData, setCurrentPage, up
                 const arrayBuffer = await file.arrayBuffer();
                 const result = await mammoth.extractRawText({ arrayBuffer });
                 extractedText = result.value;
+            } else if (file.name.endsWith('.pdf')) {
+                extractedText = await extractTextFromPDF(file);
             } else {
                 extractedText = await file.text();
             }
@@ -1639,7 +1662,7 @@ Ma trận: \`\`\`json\n${JSON.stringify(topics, null, 2)}\n\`\`\``;
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-base font-bold text-indigo-900 dark:text-indigo-200">
                         <Upload size={20} className="text-indigo-600 dark:text-indigo-400"/>
-                        Tải lên tệp Ma trận hoặc Bản đặc tả (.docx, .txt) để tự động trích xuất
+                        Tải lên tệp Ma trận hoặc Bản đặc tả (.docx, .txt, .pdf) để tự động trích xuất
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -1649,7 +1672,7 @@ Ma trận: \`\`\`json\n${JSON.stringify(topics, null, 2)}\n\`\`\``;
                     >
                         <FileUp className="mx-auto h-12 w-12 text-indigo-500 mb-2 animate-bounce-short" />
                         <p className="text-sm font-semibold text-stone-900 dark:text-slate-100">
-                            Nhấp để chọn tệp Word (.docx) hoặc Văn bản (.txt) chứa Ma trận / Bản đặc tả
+                            Nhấp để chọn tệp Word (.docx), PDF (.pdf) hoặc Văn bản (.txt) chứa Ma trận / Bản đặc tả
                         </p>
                         <p className="text-xs text-stone-500 dark:text-slate-400 mt-1">
                             Hệ thống sẽ tự động bóc tách bảng biểu, chủ đề, yêu cầu cần đạt và phân bổ mức độ để điền vào chế độ thủ công.
@@ -1657,7 +1680,7 @@ Ma trận: \`\`\`json\n${JSON.stringify(topics, null, 2)}\n\`\`\``;
                         <input 
                             ref={matrixFileInputRef} 
                             type="file" 
-                            accept=".docx,.doc,.txt" 
+                            accept=".docx,.doc,.txt,.pdf" 
                             className="sr-only" 
                             onChange={handleMatrixFileSelection} 
                             disabled={isExtractingMatrix}
